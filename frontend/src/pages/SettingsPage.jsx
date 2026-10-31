@@ -3,14 +3,9 @@ import {
   Settings,
   Shield,
   Map,
-  Sliders,
   CheckCircle,
-  AlertTriangle,
-  Radio,
   FileCode,
   Save,
-  RotateCcw,
-  Zap,
 } from "lucide-react";
 
 export function SettingsPage() {
@@ -24,33 +19,33 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-3 max-w-4xl">
       {/* Header */}
-      <div className="bg-[#0A111A]/95 border border-teal-900/30 rounded-2xl p-5 backdrop-blur-md shadow-2xl">
-        <h2 className="text-base font-bold text-white flex items-center gap-2">
-          <Settings className="w-5 h-5 text-teal-400" />
-          Command Center Intelligence & System Configuration
+      <div className="bg-[#0B101B] border border-[#1E293B] rounded-xl p-4 shadow-md">
+        <h2 className="text-sm font-extrabold text-white flex items-center gap-2 tracking-tight">
+          <Settings className="w-4 h-4 text-[#38BDF8]" />
+          System Settings & Verification Protocols
         </h2>
-        <p className="text-xs text-slate-400 mt-0.5">
+        <p className="text-xs text-[#94A3B8] mt-0.5">
           Configure autonomous agent thresholds, real-world feed polling frequencies, and CAP 1.2 NDMA SACHET alert dispatch rules
         </p>
       </div>
 
       {/* 1. Autonomous Verification Engine Parameters */}
-      <div className="bg-[#0A111A]/95 border border-teal-900/30 rounded-2xl p-5 backdrop-blur-md shadow-2xl space-y-4">
-        <div className="flex items-center gap-2 border-b border-teal-900/30 pb-3">
-          <Shield className="w-4 h-4 text-teal-400" />
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+      <div className="bg-[#0B101B] border border-[#1E293B] rounded-xl p-4 shadow-md space-y-3.5">
+        <div className="flex items-center gap-2 border-b border-[#1E293B] pb-2.5">
+          <Shield className="w-4 h-4 text-[#38BDF8]" />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-white">
             Multi-Agent Scoring & Verification Thresholds
           </h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">
-              Minimum Verification Threshold: <span className="font-mono text-amber-300 font-bold">{threshold}</span>
+            <label className="block text-white font-semibold mb-1">
+              Minimum Verification Threshold: <span className="font-mono text-[#10B981] font-bold">{threshold}</span>
             </label>
-            <p className="text-[11px] text-slate-400 mb-2">
+            <p className="text-[11px] text-[#94A3B8] mb-2">
               Reports with composite score &ge; this value and C1/C2 pass are automatically verified.
             </p>
             <input
@@ -60,15 +55,15 @@ export function SettingsPage() {
               step="0.05"
               value={threshold}
               onChange={(e) => setThreshold(parseFloat(e.target.value))}
-              className="w-full accent-teal-400 h-2 bg-[#060D17] rounded-lg cursor-pointer"
+              className="w-full accent-[#2563EB] h-1.5 bg-[#1E293B] rounded cursor-pointer"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">
-              Ingestion Relevance Gate: <span className="font-mono text-teal-400 font-bold">{relevanceScore}</span>
+            <label className="block text-white font-semibold mb-1">
+              Ingestion Relevance Gate: <span className="font-mono text-[#38BDF8] font-bold">{relevanceScore}</span>
             </label>
-            <p className="text-[11px] text-slate-400 mb-2">
+            <p className="text-[11px] text-[#94A3B8] mb-2">
               Raw crowd signals with relevance below this value are automatically dropped as noise.
             </p>
             <input
@@ -78,71 +73,71 @@ export function SettingsPage() {
               step="0.05"
               value={relevanceScore}
               onChange={(e) => setRelevanceScore(parseFloat(e.target.value))}
-              className="w-full accent-teal-400 h-2 bg-[#060D17] rounded-lg cursor-pointer"
+              className="w-full accent-[#2563EB] h-1.5 bg-[#1E293B] rounded cursor-pointer"
             />
           </div>
         </div>
 
         {/* Scoring Weights Table */}
-        <div className="p-3.5 bg-[#060D17] rounded-xl border border-teal-900/40 text-xs">
-          <span className="font-semibold text-slate-300 block mb-2">
+        <div className="p-3 bg-[#0E1526] rounded-lg border border-[#1E293B] text-xs">
+          <span className="font-semibold text-white block mb-2">
             5-Pillar Weighted Formulation (Judge Agent):
           </span>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-[11px] font-mono">
-            <div className="p-2.5 bg-[#0B1522] rounded-lg border border-teal-900/30">
-              <span className="text-slate-400 block">C1 Official</span>
-              <strong className="text-amber-300">30%</strong>
+            <div className="p-2 bg-[#111827] rounded border border-[#1E293B]">
+              <span className="text-[#94A3B8] block">C1 Official</span>
+              <strong className="text-[#38BDF8]">30%</strong>
             </div>
-            <div className="p-2.5 bg-[#0B1522] rounded-lg border border-teal-900/30">
-              <span className="text-slate-400 block">C2 Physical</span>
-              <strong className="text-teal-400">25%</strong>
+            <div className="p-2 bg-[#111827] rounded border border-[#1E293B]">
+              <span className="text-[#94A3B8] block">C2 Physical</span>
+              <strong className="text-[#10B981]">25%</strong>
             </div>
-            <div className="p-2.5 bg-[#0B1522] rounded-lg border border-teal-900/30">
-              <span className="text-slate-400 block">C5 Corroboration</span>
-              <strong className="text-teal-300">20%</strong>
+            <div className="p-2 bg-[#111827] rounded border border-[#1E293B]">
+              <span className="text-[#94A3B8] block">C5 Corroboration</span>
+              <strong className="text-[#38BDF8]">20%</strong>
             </div>
-            <div className="p-2.5 bg-[#0B1522] rounded-lg border border-teal-900/30">
-              <span className="text-slate-400 block">C3 Provenance</span>
-              <strong className="text-amber-400">15%</strong>
+            <div className="p-2 bg-[#111827] rounded border border-[#1E293B]">
+              <span className="text-[#94A3B8] block">C3 Provenance</span>
+              <strong className="text-[#F59E0B]">15%</strong>
             </div>
-            <div className="p-2.5 bg-[#0B1522] rounded-lg border border-teal-900/30">
-              <span className="text-slate-400 block">C4 Location</span>
-              <strong className="text-teal-400">10%</strong>
+            <div className="p-2 bg-[#111827] rounded border border-[#1E293B]">
+              <span className="text-[#94A3B8] block">C4 Location</span>
+              <strong className="text-[#38BDF8]">10%</strong>
             </div>
           </div>
         </div>
       </div>
 
       {/* 2. GIS & Map Configuration */}
-      <div className="bg-[#0A111A]/95 border border-teal-900/30 rounded-2xl p-5 backdrop-blur-md shadow-2xl space-y-4">
-        <div className="flex items-center gap-2 border-b border-teal-900/30 pb-3">
-          <Map className="w-4 h-4 text-teal-400" />
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+      <div className="bg-[#0B101B] border border-[#1E293B] rounded-xl p-4 shadow-md space-y-3.5">
+        <div className="flex items-center gap-2 border-b border-[#1E293B] pb-2.5">
+          <Map className="w-4 h-4 text-[#38BDF8]" />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-white">
             GIS Map Tile & Projection Settings
           </h3>
         </div>
 
-        <div className="space-y-3 text-xs">
-          <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#060D17] border border-teal-900/40">
+        <div className="space-y-2 text-xs">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-[#0E1526] border border-[#1E293B]">
             <div>
-              <span className="font-bold text-slate-200 block">Basemap Style Engine</span>
-              <span className="text-[11px] text-slate-400">
-                Esri World Dark Gray Canvas (Zero token dependency, high contrast, token-free, military-grade GIS)
+              <span className="font-semibold text-white block">Basemap Imagery Engine</span>
+              <span className="text-[11px] text-[#94A3B8]">
+                Esri World Imagery Aerial Reconnaissance (High-resolution satellite topography)
               </span>
             </div>
-            <span className="text-xs font-mono text-teal-300 bg-teal-500/15 px-2.5 py-0.5 rounded-full border border-teal-500/30 font-bold">
+            <span className="text-xs font-mono text-[#10B981] bg-[#10B981]/20 px-2 py-0.5 rounded border border-[#10B981]/40 font-semibold">
               ACTIVE
             </span>
           </div>
 
-          <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#060D17] border border-teal-900/40">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-[#0E1526] border border-[#1E293B]">
             <div>
-              <span className="font-bold text-slate-200 block">Spatial Clustering Algorithm</span>
-              <span className="text-[11px] text-slate-400">
+              <span className="font-semibold text-white block">Spatial Clustering Algorithm</span>
+              <span className="text-[11px] text-[#94A3B8]">
                 DBSCAN (Radius &epsilon; = 5.0 km, MinPts = 2 reports within 60 mins)
               </span>
             </div>
-            <span className="text-xs font-mono text-amber-300 bg-amber-400/15 px-2.5 py-0.5 rounded-full border border-amber-400/30 font-bold">
+            <span className="text-xs font-mono text-[#10B981] bg-[#10B981]/20 px-2 py-0.5 rounded border border-[#10B981]/40 font-semibold">
               ENABLED
             </span>
           </div>
@@ -150,52 +145,52 @@ export function SettingsPage() {
       </div>
 
       {/* 3. CAP 1.2 Protocol Integration */}
-      <div className="bg-[#0A111A]/95 border border-teal-900/30 rounded-2xl p-5 backdrop-blur-md shadow-2xl space-y-3">
-        <div className="flex items-center gap-2 border-b border-teal-900/30 pb-3">
-          <FileCode className="w-4 h-4 text-teal-400" />
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+      <div className="bg-[#0B101B] border border-[#1E293B] rounded-xl p-4 shadow-md space-y-3">
+        <div className="flex items-center gap-2 border-b border-[#1E293B] pb-2.5">
+          <FileCode className="w-4 h-4 text-[#38BDF8]" />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-white">
             India NDMA SACHET CAP 1.2 Gateway
           </h3>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <div>
-            <label className="block text-slate-400 mb-1 font-semibold">Dispatch Gateway Endpoint</label>
+            <label className="block text-[#94A3B8] mb-1 font-semibold">Dispatch Gateway Endpoint</label>
             <input
               type="text"
               readOnly
               value="https://sachet.ndma.gov.in/api/v1/cap/dispatch"
-              className="w-full bg-[#060D17] border border-teal-900/40 rounded-xl px-3.5 py-2 font-mono text-[11px] text-slate-400 cursor-not-allowed"
+              className="w-full bg-[#0E1526] border border-[#1E293B] rounded-lg px-3 py-1.5 font-mono text-[11px] text-[#64748B] cursor-not-allowed"
             />
           </div>
           <div>
-            <label className="block text-slate-400 mb-1 font-semibold">Sender Identifier</label>
+            <label className="block text-[#94A3B8] mb-1 font-semibold">Sender Identifier</label>
             <input
               type="text"
               readOnly
-              value="dispatch.agent@disasterwatch.ai"
-              className="w-full bg-[#060D17] border border-teal-900/40 rounded-xl px-3.5 py-2 font-mono text-[11px] text-slate-400 cursor-not-allowed"
+              value="dispatch.agent@crisisops.ai"
+              className="w-full bg-[#0E1526] border border-[#1E293B] rounded-lg px-3 py-1.5 font-mono text-[11px] text-[#64748B] cursor-not-allowed"
             />
           </div>
         </div>
       </div>
 
       {/* Save Button */}
-      <div className="flex items-center justify-between pt-2">
+      <div className="flex items-center justify-between pt-1">
         {saved ? (
-          <span className="text-xs text-teal-400 font-bold flex items-center gap-1.5">
+          <span className="text-xs text-[#10B981] font-semibold flex items-center gap-1.5">
             <CheckCircle className="w-4 h-4" />
             Configuration saved successfully.
           </span>
         ) : (
-          <span className="text-xs text-slate-500 font-mono">All changes persist in session memory.</span>
+          <span className="text-xs text-[#64748B] font-mono">All changes persist in session memory.</span>
         )}
 
         <button
           onClick={handleSave}
-          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 via-teal-400 to-amber-400 hover:from-teal-400 hover:to-amber-300 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-teal-950/40 transition-all cursor-pointer active:scale-95"
+          className="px-4 py-2 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-medium text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
         >
-          <Save className="w-4 h-4 text-slate-950" />
+          <Save className="w-4 h-4" />
           Save System Configuration
         </button>
       </div>

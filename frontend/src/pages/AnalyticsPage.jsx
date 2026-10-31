@@ -11,18 +11,10 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 import {
   BarChart3,
-  TrendingUp,
-  ShieldCheck,
-  Radio,
-  Clock,
-  Activity,
-  Layers,
-  Zap,
 } from "lucide-react";
 import { DISASTER_COLORS } from "../data/mockDisasters";
 
@@ -45,30 +37,18 @@ export function AnalyticsPage({ reports = [], stats }) {
   const hazardData = Object.entries(stats.byType || {}).map(([type, count]) => ({
     name: DISASTER_COLORS[type]?.label || type,
     value: count,
-    color: DISASTER_COLORS[type]?.hex || "#2dd4bf",
+    color: DISASTER_COLORS[type]?.hex || "#38BDF8",
   }));
 
-  // 3. Status Breakdown with Teal, Champagne Gold, and Electric Orange
+  // 3. Status Breakdown with Command Palette
   const statusData = [
-    { name: "Verified Intelligence", count: stats.verified, color: "#d4af37" },
-    { name: "De-duplicated", count: stats.duplicate, color: "#2dd4bf" },
-    { name: "Under Review", count: stats.pending, color: "#0d9488" },
-    { name: "Rejected / Hoaxes", count: stats.flagged, color: "#ff5f1f" },
+    { name: "Verified", count: stats.verified, color: "#10B981" },
+    { name: "De-duplicated", count: stats.duplicate, color: "#38BDF8" },
+    { name: "Review Lane", count: stats.pending, color: "#F59E0B" },
+    { name: "Rejected", count: stats.flagged, color: "#EF4444" },
   ];
 
-  // 4. Source Platform Breakdown
-  const sourceCounts = {};
-  reports.forEach((r) => {
-    const src = r.sourceMeta?.name || r.source?.platform || "other";
-    sourceCounts[src] = (sourceCounts[src] || 0) + 1;
-  });
-
-  const sourceData = Object.entries(sourceCounts).map(([src, count]) => ({
-    platform: src.toUpperCase(),
-    reports: count,
-  }));
-
-  // 5. Agent Latency & Efficiency
+  // 4. Agent Latency & Efficiency
   const agentBenchmark = [
     { agent: "Ingestion", latency: 115, throughput: 142 },
     { agent: "Verification", latency: 380, throughput: 98 },
@@ -79,7 +59,7 @@ export function AnalyticsPage({ reports = [], stats }) {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#0A121D] border border-teal-500/40 p-3 rounded-xl shadow-2xl text-xs font-mono">
+        <div className="bg-[#0E1526] border border-[#1E293B] p-2.5 rounded-lg shadow-xl text-xs font-mono text-white">
           <p className="font-bold text-white mb-1">{label}</p>
           {payload.map((entry, index) => (
             <p key={`item-${index}`} style={{ color: entry.color || entry.fill }}>
@@ -93,64 +73,64 @@ export function AnalyticsPage({ reports = [], stats }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Header */}
-      <div className="bg-[#0A111A]/95 border border-teal-900/30 rounded-2xl p-5 backdrop-blur-md shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="bg-[#0B101B] border border-[#1E293B] rounded-xl p-4 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-teal-400" />
-            Disaster Intelligence & Agent Telemetry Analytics
+          <h2 className="text-sm font-extrabold text-white flex items-center gap-2 tracking-tight">
+            <BarChart3 className="w-4 h-4 text-[#38BDF8]" />
+            Readiness Index & Telemetry Analytics
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Real-time analytics across signal ingestion, cross-verification confidence, deduplication efficiency, and agent response latency
+          <p className="text-xs text-[#94A3B8] mt-0.5">
+            Operational analytics across signal ingestion, cross-verification consensus, deduplication, and agent latency
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+        <div className="flex items-center gap-2 text-xs font-mono text-[#94A3B8]">
           <span>Window: Past 24 Hours</span>
-          <span className="text-teal-700">•</span>
-          <span className="text-amber-300 font-bold">Live Synced</span>
+          <span className="text-[#334155]">•</span>
+          <span className="text-[#10B981] font-semibold">Live Synced</span>
         </div>
       </div>
 
       {/* Primary Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* 1. Incident Inflow vs Verified Timeline */}
-        <div className="bg-[#0A111A]/95 border border-teal-900/30 rounded-2xl p-5 backdrop-blur-md shadow-2xl">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-[#0B101B] border border-[#1E293B] rounded-xl p-4 shadow-md">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                24h Signal Inflow vs. Verified Incidents
+              <h3 className="text-xs font-bold uppercase tracking-wider text-white">
+                Signal Inflow vs. Verified Incidents
               </h3>
-              <p className="text-[11px] text-slate-400">Total raw signals ingested vs corroborated alerts</p>
+              <p className="text-[11px] text-[#94A3B8]">Raw signals ingested vs corroborated alerts</p>
             </div>
-            <span className="text-[10px] font-mono text-teal-300 bg-[#060D17] px-2.5 py-0.5 rounded-full border border-teal-900/40 font-semibold">
+            <span className="text-[10px] font-mono text-[#38BDF8] bg-[#0E1526] px-2 py-0.5 rounded border border-[#1E293B]">
               Hourly Aggregate
             </span>
           </div>
 
-          <div className="h-64 w-full">
+          <div className="h-60 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={hourlyData}>
                 <defs>
                   <linearGradient id="colorInflow" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2dd4bf" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#2dd4bf" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#38BDF8" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#38BDF8" stopOpacity={0.0} />
                   </linearGradient>
                   <linearGradient id="colorVerified" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#d4af37" stopOpacity={0.5} />
-                    <stop offset="95%" stopColor="#d4af37" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#132738" />
-                <XAxis dataKey="time" stroke="#64748b" fontSize={11} />
-                <YAxis stroke="#64748b" fontSize={11} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
+                <XAxis dataKey="time" stroke="#64748B" fontSize={11} />
+                <YAxis stroke="#64748B" fontSize={11} />
                 <Tooltip content={<CustomTooltip />} />
                 <Area
                   type="monotone"
                   dataKey="inflow"
                   name="Raw Signals Inflow"
-                  stroke="#2dd4bf"
+                  stroke="#38BDF8"
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#colorInflow)"
@@ -159,7 +139,7 @@ export function AnalyticsPage({ reports = [], stats }) {
                   type="monotone"
                   dataKey="verified"
                   name="Verified Alerts"
-                  stroke="#d4af37"
+                  stroke="#10B981"
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#colorVerified)"
@@ -170,27 +150,27 @@ export function AnalyticsPage({ reports = [], stats }) {
         </div>
 
         {/* 2. Operational Lanes Breakdown */}
-        <div className="bg-[#0A111A]/95 border border-teal-900/30 rounded-2xl p-5 backdrop-blur-md shadow-2xl">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-[#0B101B] border border-[#1E293B] rounded-xl p-4 shadow-md">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-white">
                 Operational Pipeline Status Breakdown
               </h3>
-              <p className="text-[11px] text-slate-400">Distribution across 3-lane verification architecture</p>
+              <p className="text-[11px] text-[#94A3B8]">Distribution across 3-lane verification architecture</p>
             </div>
-            <span className="text-[10px] font-mono text-amber-300 bg-[#060D17] px-2.5 py-0.5 rounded-full border border-teal-900/40 font-semibold">
+            <span className="text-[10px] font-mono text-[#F59E0B] bg-[#0E1526] px-2 py-0.5 rounded border border-[#1E293B]">
               Active Records
             </span>
           </div>
 
-          <div className="h-64 w-full">
+          <div className="h-60 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={statusData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#132738" />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                <YAxis stroke="#64748b" fontSize={11} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
+                <XAxis dataKey="name" stroke="#64748B" fontSize={11} />
+                <YAxis stroke="#64748B" fontSize={11} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="count" name="Count" radius={[6, 6, 0, 0]}>
+                <Bar dataKey="count" name="Count" radius={[4, 4, 0, 0]}>
                   {statusData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
@@ -201,29 +181,29 @@ export function AnalyticsPage({ reports = [], stats }) {
         </div>
 
         {/* 3. Hazard Distribution */}
-        <div className="bg-[#0A111A]/95 border border-teal-900/30 rounded-2xl p-5 backdrop-blur-md shadow-2xl">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-[#0B101B] border border-[#1E293B] rounded-xl p-4 shadow-md">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-white">
                 Multi-Hazard Incidence Distribution
               </h3>
-              <p className="text-[11px] text-slate-400">Breakdown by extreme weather disaster category</p>
+              <p className="text-[11px] text-[#94A3B8]">Breakdown by extreme weather disaster category</p>
             </div>
-            <span className="text-[10px] font-mono text-teal-300 bg-[#060D17] px-2.5 py-0.5 rounded-full border border-teal-900/40 font-semibold">
+            <span className="text-[10px] font-mono text-[#38BDF8] bg-[#0E1526] px-2 py-0.5 rounded border border-[#1E293B]">
               GIS Categorization
             </span>
           </div>
 
-          <div className="h-64 w-full">
+          <div className="h-60 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={hazardData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={85}
-                  paddingAngle={4}
+                  innerRadius={55}
+                  outerRadius={80}
+                  paddingAngle={3}
                   dataKey="value"
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   fontSize={10}
@@ -239,27 +219,27 @@ export function AnalyticsPage({ reports = [], stats }) {
         </div>
 
         {/* 4. Agent Performance & Latency Benchmark */}
-        <div className="bg-[#0A111A]/95 border border-teal-900/30 rounded-2xl p-5 backdrop-blur-md shadow-2xl">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-[#0B101B] border border-[#1E293B] rounded-xl p-4 shadow-md">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                Autonomous Multi-Agent Latency Benchmarks
+              <h3 className="text-xs font-bold uppercase tracking-wider text-white">
+                Agent Execution Latency Benchmarks
               </h3>
-              <p className="text-[11px] text-slate-400">Average execution processing latency in milliseconds</p>
+              <p className="text-[11px] text-[#94A3B8]">Average processing latency in milliseconds</p>
             </div>
-            <span className="text-[10px] font-mono text-teal-300 bg-[#060D17] px-2.5 py-0.5 rounded-full border border-teal-900/40 font-semibold">
+            <span className="text-[10px] font-mono text-[#10B981] bg-[#0E1526] px-2 py-0.5 rounded border border-[#1E293B]">
               Benchmark (ms)
             </span>
           </div>
 
-          <div className="h-64 w-full">
+          <div className="h-60 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={agentBenchmark} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#132738" />
-                <XAxis type="number" stroke="#64748b" fontSize={11} />
-                <YAxis dataKey="agent" type="category" stroke="#64748b" fontSize={11} width={80} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" />
+                <XAxis type="number" stroke="#64748B" fontSize={11} />
+                <YAxis dataKey="agent" type="category" stroke="#64748B" fontSize={11} width={80} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="latency" name="Latency (ms)" fill="#2dd4bf" radius={[0, 6, 6, 0]} />
+                <Bar dataKey="latency" name="Latency (ms)" fill="#2563EB" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

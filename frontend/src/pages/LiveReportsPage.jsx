@@ -49,33 +49,33 @@ export function LiveReportsPage({
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(displayedReports, null, 2));
     const downloadAnchor = document.createElement("a");
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `DisasterWatch_Intelligence_Reports_${Date.now()}.json`);
+    downloadAnchor.setAttribute("download", `CrisisOps_DamageReports_${Date.now()}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Top Filter & Control Panel */}
-      <div className="bg-[#FFFFFF] border border-[#E1E5E0] rounded p-4 shadow-2xs space-y-3.5">
+      <div className="bg-[#0B101B] border border-[#1E293B] rounded-xl p-4 shadow-md space-y-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <h2 className="text-xs font-bold text-[#252C2A] flex items-center gap-2 uppercase tracking-wide">
-              <Radio className="w-3.5 h-3.5 text-[#183D35]" />
-              Live Incident Intelligence Feed & Inflow Stream
+            <h2 className="text-sm font-extrabold text-white flex items-center gap-2 tracking-tight">
+              <Radio className="w-4 h-4 text-[#38BDF8]" />
+              Damage Reports & Disaster Telemetry Influx
             </h2>
-            <p className="text-xs text-[#737D78] mt-0.5">
-              Showing {displayedReports.length} of {reports.length} signals collected, verified & geocoded across India
+            <p className="text-xs text-[#94A3B8] mt-0.5">
+              Showing {displayedReports.length} of {reports.length} signals collected, verified & geocoded
             </p>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center bg-[#F8F9F7] border border-[#E1E5E0] rounded p-0.5">
+            <div className="flex items-center bg-[#111827] border border-[#1E293B] rounded-lg p-0.5">
               <button
                 onClick={() => setViewMode("table")}
-                className={`p-1 rounded text-xs transition-colors cursor-pointer ${
-                  viewMode === "table" ? "bg-[#FFFFFF] text-[#183D35] shadow-2xs" : "text-[#737D78] hover:text-[#252C2A]"
+                className={`p-1.5 rounded-md text-xs transition-colors cursor-pointer ${
+                  viewMode === "table" ? "bg-[#2563EB] text-white shadow-sm" : "text-[#94A3B8] hover:text-white"
                 }`}
                 title="Table View"
               >
@@ -83,8 +83,8 @@ export function LiveReportsPage({
               </button>
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-1 rounded text-xs transition-colors cursor-pointer ${
-                  viewMode === "grid" ? "bg-[#FFFFFF] text-[#183D35] shadow-2xs" : "text-[#737D78] hover:text-[#252C2A]"
+                className={`p-1.5 rounded-md text-xs transition-colors cursor-pointer ${
+                  viewMode === "grid" ? "bg-[#2563EB] text-white shadow-sm" : "text-[#94A3B8] hover:text-white"
                 }`}
                 title="Card Grid View"
               >
@@ -94,31 +94,31 @@ export function LiveReportsPage({
 
             <button
               onClick={exportDataJson}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#FFFFFF] hover:bg-[#F3F4F0] text-[#252C2A] text-xs font-medium border border-[#E1E5E0] transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#111827] hover:bg-[#1E293B] text-slate-200 text-xs font-medium border border-[#1E293B] transition-colors cursor-pointer"
             >
-              <Download className="w-3 h-3 text-[#183D35]" />
+              <Download className="w-3.5 h-3.5 text-[#38BDF8]" />
               Export JSON
             </button>
           </div>
         </div>
 
         {/* Search & Multi-Filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2.5 border-t border-[#E1E5E0]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2.5 border-t border-[#1E293B]">
           <div className="relative">
-            <Search className="w-3.5 h-3.5 text-[#737D78] absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-[#64748B] absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search reports or locations..."
-              className="w-full bg-[#FFFFFF] border border-[#E1E5E0] rounded pl-8 pr-2.5 py-1.5 text-xs text-[#252C2A] placeholder-[#737D78] focus:outline-none focus:border-[#183D35] transition-colors"
+              className="w-full bg-[#111827] border border-[#1E293B] rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-white placeholder-[#64748B] focus:outline-none focus:border-[#38BDF8] transition-colors"
             />
           </div>
 
           <select
             value={selectedType}
             onChange={(e) => setSelectedType(e.target.value)}
-            className="bg-[#FFFFFF] border border-[#E1E5E0] rounded px-2.5 py-1.5 text-xs text-[#252C2A] focus:outline-none focus:border-[#183D35] capitalize transition-colors"
+            className="bg-[#111827] border border-[#1E293B] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#38BDF8] capitalize transition-colors"
           >
             <option value="all">All Disaster Hazards</option>
             <option value="flood">Flood Inundation</option>
@@ -132,7 +132,7 @@ export function LiveReportsPage({
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="bg-[#FFFFFF] border border-[#E1E5E0] rounded px-2.5 py-1.5 text-xs text-[#252C2A] focus:outline-none focus:border-[#183D35] transition-colors"
+            className="bg-[#111827] border border-[#1E293B] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#38BDF8] transition-colors"
           >
             <option value="all">All Operational Lanes</option>
             <option value="verified">Verified Intelligence</option>
@@ -144,7 +144,7 @@ export function LiveReportsPage({
           <select
             value={selectedSeverity}
             onChange={(e) => setSelectedSeverity(e.target.value)}
-            className="bg-[#FFFFFF] border border-[#E1E5E0] rounded px-2.5 py-1.5 text-xs text-[#252C2A] focus:outline-none focus:border-[#183D35] transition-colors"
+            className="bg-[#111827] border border-[#1E293B] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-[#38BDF8] transition-colors"
           >
             <option value="all">All Severities</option>
             <option value="critical">Critical (Immediate)</option>
@@ -156,80 +156,62 @@ export function LiveReportsPage({
 
         {/* Operational Lane Filter Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto text-xs pt-1">
-          <span className="text-[#737D78] font-semibold text-[11px]">Lane Filter:</span>
+          <span className="text-[#64748B] font-semibold text-[11px]">Lane:</span>
           <button
             onClick={() => setSelectedStatus("all")}
-            className={`px-2.5 py-1 rounded text-xs font-medium cursor-pointer transition-colors ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors ${
               selectedStatus === "all"
-                ? "bg-[#183D35] text-white"
-                : "bg-[#FFFFFF] text-[#737D78] border border-[#E1E5E0] hover:text-[#252C2A]"
+                ? "bg-[#2563EB] text-white font-bold"
+                : "bg-[#111827] text-[#94A3B8] border border-[#1E293B] hover:text-white"
             }`}
           >
             All Reports ({reports.length})
           </button>
           <button
             onClick={() => setSelectedStatus("verified")}
-            className={`px-2.5 py-1 rounded text-xs font-medium cursor-pointer transition-colors border ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors border ${
               selectedStatus === "verified"
-                ? "bg-[#183D35] text-white border-[#183D35]"
-                : "bg-[#FFFFFF] text-[#737D78] border-[#E1E5E0] hover:text-[#252C2A]"
+                ? "bg-[#10B981] text-slate-950 font-bold border-[#10B981]"
+                : "bg-[#111827] text-[#94A3B8] border-[#1E293B] hover:text-white"
             }`}
           >
             Verified Intelligence
           </button>
           <button
             onClick={() => setSelectedStatus("pending")}
-            className={`px-2.5 py-1 rounded text-xs font-medium cursor-pointer transition-colors border ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors border ${
               selectedStatus === "pending"
-                ? "bg-[#D98236] text-white border-[#D98236]"
-                : "bg-[#FFFFFF] text-[#737D78] border-[#E1E5E0] hover:text-[#252C2A]"
+                ? "bg-[#F59E0B] text-slate-950 font-bold border-[#F59E0B]"
+                : "bg-[#111827] text-[#94A3B8] border-[#1E293B] hover:text-white"
             }`}
           >
             Review Lane
           </button>
           <button
             onClick={() => setSelectedStatus("rejected")}
-            className={`px-2.5 py-1 rounded text-xs font-medium cursor-pointer transition-colors border ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors border ${
               selectedStatus === "rejected" || selectedStatus === "flagged"
-                ? "bg-[#C94C4C] text-white border-[#C94C4C]"
-                : "bg-[#FFFFFF] text-[#C94C4C] border-[#E1E5E0] hover:bg-[#C94C4C]/5"
+                ? "bg-[#DC2626] text-white font-bold border-[#DC2626]"
+                : "bg-[#111827] text-[#EF4444] border-[#1E293B] hover:bg-[#7F1D1D]/30"
             }`}
           >
             Rejected / Hoaxes
           </button>
         </div>
-
-        {/* Source Channels */}
-        <div className="flex items-center gap-1.5 overflow-x-auto text-[11px] pt-1">
-          <span className="text-[#737D78] font-medium">Channel:</span>
-          {sources.map((src) => (
-            <button
-              key={src.id}
-              onClick={() => setSelectedSource(src.id)}
-              className={`px-2 py-0.5 rounded font-medium transition-colors cursor-pointer border ${
-                selectedSource === src.id
-                  ? "bg-[#183D35] text-white border-[#183D35]"
-                  : "bg-[#FFFFFF] text-[#737D78] border-[#E1E5E0] hover:text-[#252C2A]"
-              }`}
-            >
-              {src.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Main Content: Table or Grid */}
       {displayedReports.length === 0 ? (
-        <div className="bg-[#FFFFFF] border border-[#E1E5E0] rounded p-10 text-center text-[#737D78]">
-          <AlertTriangle className="w-6 h-6 text-[#D98236] mx-auto mb-2" />
-          <h3 className="text-sm font-semibold text-[#252C2A] mb-1">No Matching Telemetry Reports</h3>
-          <p className="text-xs text-[#737D78]">Try adjusting your source channel filters or search terms.</p>
+        <div className="bg-[#0B101B] border border-[#1E293B] rounded-xl p-10 text-center text-[#94A3B8]">
+          <AlertTriangle className="w-8 h-8 text-[#F59E0B] mx-auto mb-2 opacity-80" />
+          <h3 className="text-sm font-semibold text-white mb-1">No Matching Damage Reports</h3>
+          <p className="text-xs text-[#64748B]">Try adjusting your search query or filters.</p>
         </div>
       ) : viewMode === "table" ? (
-        <div className="bg-[#FFFFFF] border border-[#E1E5E0] rounded overflow-hidden shadow-2xs">
+        <div className="bg-[#0B101B] border border-[#1E293B] rounded-xl overflow-hidden shadow-md">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-[#252C2A]">
-              <thead className="bg-[#F8F9F7] text-[11px] uppercase tracking-wider text-[#737D78] border-b border-[#E1E5E0]">
+            <table className="w-full text-left text-xs text-slate-200">
+              <thead className="bg-[#0E1526] text-[11px] uppercase tracking-wider text-[#94A3B8] border-b border-[#1E293B]">
                 <tr>
                   <th className="py-2.5 px-3 font-semibold">Report ID</th>
                   <th className="py-2.5 px-3 font-semibold">Hazard</th>
@@ -242,16 +224,16 @@ export function LiveReportsPage({
                   <th className="py-2.5 px-3 text-right font-semibold">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E1E5E0]">
+              <tbody className="divide-y divide-[#1E293B]">
                 {displayedReports.map((item) => {
                   const srcMeta = item.sourceMeta || { name: item.source?.platform || "Crowd", icon: "📍" };
                   return (
                     <tr
                       key={item.id}
                       onClick={() => onSelectIncident(item)}
-                      className="hover:bg-[#F8F9F7] cursor-pointer transition-colors group"
+                      className="hover:bg-[#131D31] cursor-pointer transition-colors group"
                     >
-                      <td className="py-2.5 px-3 font-mono text-[11px] text-[#183D35] font-semibold whitespace-nowrap">
+                      <td className="py-2.5 px-3 font-mono text-[11px] text-[#38BDF8] font-semibold whitespace-nowrap">
                         {item.id}
                       </td>
 
@@ -260,28 +242,28 @@ export function LiveReportsPage({
                       </td>
 
                       <td className="py-2.5 px-3 min-w-[200px] max-w-[280px]">
-                        <div className="font-semibold text-[#252C2A] group-hover:text-[#183D35] transition-colors truncate">
+                        <div className="font-semibold text-white group-hover:text-[#38BDF8] transition-colors truncate">
                           {item.title}
                         </div>
-                        <div className="text-[11px] text-[#737D78] truncate">📍 {item.location}</div>
+                        <div className="text-[11px] text-[#94A3B8] truncate">📍 {item.location}</div>
                         {(item.verdict === "rejected" || item.status === "flagged") && item.reasons?.[0] && (
-                          <div className="text-[10px] text-[#C94C4C] font-mono mt-0.5 truncate max-w-[260px] font-semibold">
+                          <div className="text-[10px] text-[#EF4444] font-mono mt-0.5 truncate max-w-[260px] font-semibold">
                             ⚠ {item.reasons[0]}
                           </div>
                         )}
                       </td>
 
-                      <td className="py-2.5 px-3 whitespace-nowrap text-[#737D78] text-[11px]">
+                      <td className="py-2.5 px-3 whitespace-nowrap text-[#94A3B8] text-[11px]">
                         <div>{formatTimeAgo(item.timestamp)}</div>
-                        <div className="text-[10px] text-[#737D78] font-mono">{formatUtcTime(item.timestamp)}</div>
+                        <div className="text-[10px] text-[#64748B] font-mono">{formatUtcTime(item.timestamp)}</div>
                       </td>
 
                       <td className="py-2.5 px-3 whitespace-nowrap">
-                        <div className="flex items-center gap-1 text-[#252C2A] font-medium">
+                        <div className="flex items-center gap-1 text-slate-200 font-medium">
                           <span>{srcMeta.icon}</span>
                           <span className="truncate max-w-[110px]">{srcMeta.name}</span>
                         </div>
-                        <div className="text-[10px] text-[#737D78] font-mono truncate max-w-[100px]">
+                        <div className="text-[10px] text-[#64748B] font-mono truncate max-w-[100px]">
                           {item.source?.account || "Verified Stream"}
                         </div>
                       </td>
@@ -294,7 +276,7 @@ export function LiveReportsPage({
                         <StatusBadge status={item.status} size="xs" />
                       </td>
 
-                      <td className="py-2.5 px-3 whitespace-nowrap font-mono text-[#183D35] font-bold text-[11px]">
+                      <td className="py-2.5 px-3 whitespace-nowrap font-mono text-[#38BDF8] font-bold text-[11px]">
                         {Math.round((item.confidenceScore || 0.85) * 100)}%
                       </td>
 
@@ -304,7 +286,7 @@ export function LiveReportsPage({
                             <button
                               onClick={() => onVerify(item.id)}
                               title="Verify Report"
-                              className="p-1 rounded bg-[#FFFFFF] hover:bg-[#F3F4F0] text-[#183D35] border border-[#E1E5E0] transition-colors cursor-pointer"
+                              className="p-1 rounded bg-[#10B981]/15 hover:bg-[#10B981]/25 text-[#10B981] border border-[#10B981]/30 transition-colors cursor-pointer"
                             >
                               <CheckCircle className="w-3.5 h-3.5" />
                             </button>
@@ -313,14 +295,14 @@ export function LiveReportsPage({
                             <button
                               onClick={() => onFlag(item.id)}
                               title="Flag as Hoax"
-                              className="p-1 rounded bg-[#FFFFFF] hover:bg-[#F3F4F0] text-[#C94C4C] border border-[#E1E5E0] transition-colors cursor-pointer"
+                              className="p-1 rounded bg-[#EF4444]/15 hover:bg-[#EF4444]/25 text-[#EF4444] border border-[#EF4444]/30 transition-colors cursor-pointer"
                             >
                               <AlertTriangle className="w-3.5 h-3.5" />
                             </button>
                           )}
                           <button
                             onClick={() => onSelectIncident(item)}
-                            className="px-2 py-0.5 rounded bg-[#FFFFFF] hover:bg-[#F3F4F0] text-[#252C2A] text-[11px] font-medium border border-[#E1E5E0] cursor-pointer"
+                            className="px-2 py-0.5 rounded bg-[#1E293B] hover:bg-[#334155] text-slate-200 text-[11px] font-medium border border-[#334155] cursor-pointer"
                           >
                             Inspect
                           </button>
@@ -341,7 +323,7 @@ export function LiveReportsPage({
               <div
                 key={item.id}
                 onClick={() => onSelectIncident(item)}
-                className="bg-[#FFFFFF] border border-[#E1E5E0] rounded p-3.5 hover:border-[#183D35] transition-colors cursor-pointer flex flex-col justify-between shadow-2xs"
+                className="bg-[#0B101B] border border-[#1E293B] rounded-xl p-3.5 hover:border-[#38BDF8] transition-colors cursor-pointer flex flex-col justify-between shadow-md"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-2">
@@ -349,31 +331,31 @@ export function LiveReportsPage({
                     <SeverityBadge severity={item.severity} size="xs" />
                   </div>
 
-                  <h3 className="text-xs font-bold text-[#252C2A] hover:text-[#183D35] transition-colors mb-1 line-clamp-2">
+                  <h3 className="text-xs font-bold text-white hover:text-[#38BDF8] transition-colors mb-1 line-clamp-2">
                     {item.title}
                   </h3>
 
                   {(item.verdict === "rejected" || item.status === "flagged") && item.reasons?.[0] && (
-                    <div className="p-1.5 rounded bg-[#C94C4C]/10 border border-[#C94C4C]/30 text-[10px] text-[#C94C4C] mb-2 font-mono font-semibold">
+                    <div className="p-1.5 rounded-lg bg-[#7F1D1D]/30 border border-[#EF4444]/40 text-[10px] text-red-300 mb-2 font-mono font-semibold">
                       ⚠ {item.reasons[0]}
                     </div>
                   )}
 
-                  <p className="text-[11px] text-[#737D78] line-clamp-2 mb-2">{item.description}</p>
+                  <p className="text-[11px] text-[#94A3B8] line-clamp-2 mb-2">{item.description}</p>
                 </div>
 
-                <div className="pt-2 border-t border-[#E1E5E0] space-y-1.5 text-[11px]">
-                  <div className="flex items-center justify-between text-[#737D78]">
+                <div className="pt-2 border-t border-[#1E293B] space-y-1.5 text-[11px]">
+                  <div className="flex items-center justify-between text-[#94A3B8]">
                     <span className="truncate">📍 {item.location}</span>
-                    <span className="font-mono text-[#183D35] font-medium">{formatTimeAgo(item.timestamp)}</span>
+                    <span className="font-mono text-[#38BDF8] font-medium">{formatTimeAgo(item.timestamp)}</span>
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-[#252C2A]">
+                    <div className="flex items-center gap-1 text-slate-200">
                       <span>{srcMeta.icon}</span>
                       <span className="font-semibold text-[10px]">{srcMeta.name}</span>
                     </div>
-                    <span className="font-mono text-[#183D35] font-bold">
+                    <span className="font-mono text-[#38BDF8] font-bold">
                       {Math.round((item.confidenceScore || 0.85) * 100)}%
                     </span>
                   </div>
