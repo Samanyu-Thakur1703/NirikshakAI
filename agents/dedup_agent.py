@@ -3,7 +3,7 @@ Dedup Agent (Agent 2 of 7) for NirikshakAI.
 Implements GroundTruth Architecture: 3-tier duplicate detection + DBSCAN spatio-temporal clustering.
 """
 
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Optional, Tuple
 from collections import defaultdict
 
 from backend.models import DisasterReport, Incident, DedupStats, DedupResponse
