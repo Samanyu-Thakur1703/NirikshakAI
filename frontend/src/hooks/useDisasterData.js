@@ -1,203 +1,318 @@
-/**
- * useDisasterData — Remote-first data hook for DisasterWatch AI
- *
- * Replaces MOCK_REPORTS with real API calls from the FastAPI backend.
- * Falls back to local mock data if backend is unreachable (offline mode).
- *
- * Data flow:
- *   1. Try to fetch reports & incidents from /api
- *   2. If API fails, use local mock data as fallback
- *   3. Compute derived state (filteredReports, stats, priorityAlerts)
- */
-
 import { useState, useMemo, useEffect, useCallback } from "react";
-import {
-  fetchReports,
-  fetchIncidents,
-  triggerIngestion,
-  runDedup,
-  ingestReport,
-} from "../services/api";
 import { MOCK_REPORTS } from "../data/mockDisasters";
 import { calculateDashboardStats } from "../utils/formatters";
+import { api } from "../services/api";
+import { normalizeBackendReport, normalizeBackendIncident } from "../utils/normalizer";
 
 export function useDisasterData() {
-  // Remote state
-  const [reports, setReports] = useState([]);
-  const [incidents, setIncidents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isSimulatingLive, setIsSimulatingLive] = useState(false);
-  const [liveStreamAlert, setLiveStreamAlert] = useState(null);
-
-  // Local filters
+  const [reports, setReports] = useState(MOCK_REPORTS);
+  const [backendStats, setBackendStats] = useState(null);
+  const [isBackendConnected, setIsBackendConnected] = useState(false);
+  const [backendError, setBackendError] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isIngesting, setIsIngesting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedSeverity, setSelectedSeverity] = useState("all");
   const [selectedIncident, setSelectedIncident] = useState(null);
+  const [isSimulatingLive, setIsSimulatingLive] = useState(false);
+  const [liveStreamAlert, setLiveStreamAlert] = useState(null);
 
-  // Fetch data from backend on mount
-  useEffect(() => {
-    async function load() {
-      try {
-        setLoading(true);
-        const [remoteReports, remoteIncidents] = await Promise.all([
-          fetchReports(),
-          fetchIncidents(),
-        ]);
-        setReports(remoteReports);
-        setIncidents(remoteIncidents);
-        setError(null);
-      } catch (e) {
-        // Fallback to mock data when backend unavailable
-        console.warn("[useDisasterData] Backend unavailable, using mock data:", e.message);
-        setReports(MOCK_REPORTS);
-        setIncidents([]);
-        setError(e);
-      } finally {
-        setLoading(false);
+  const loadBackendData = useCallback(async () => {
+    setIsRefreshing(true);
+    setBackendError(null);
+
+    try {
+      const healthRes = await api.checkHealth();
+      if (!healthRes.success) {
+        throw new Error(healthRes.error || "Backend service offline");
       }
+
+      const [reportsRes, incidentsRes, statsRes] = await Promise.all([
+        api.getReports({ limit: 300 }),
+        api.getIncidents({ limit: 100 }),
+        api.getStats(),
+      ]);
+
+      if (reportsRes.success && Array.isArray(reportsRes.data) && reportsRes.data.length > 0) {
+        const normalizedReports = reportsRes.data.map(normalizeBackendReport).filter(Boolean);
+        const normalizedIncidents =
+          incidentsRes.success && Array.isArray(incidentsRes.data)
+            ? incidentsRes.data.map(normalizeBackendIncident).filter(Boolean)
+            : [];
+
+        setReports([...normalizedIncidents, ...normalizedReports]);
+        setIsBackendConnected(true);
+        if (statsRes.success) setBackendStats(statsRes.data);
+      } else {
+        setIsBackendConnected(true);
+      }
+    } catch {
+      setIsBackendConnected(false);
+      setBackendError(
+        "Backend server offline (port 8000). Active offline fallback dataset loaded for demo continuity."
+      );
+    } finally {
+      setIsRefreshing(false);
     }
-    load();
   }, []);
 
-  // Filtered reports (computed locally, no API call)
+  useEffect(() => {
+    const initialLoad = setTimeout(loadBackendData, 0);
+    const interval = setInterval(loadBackendData, isBackendConnected ? 30000 : 5000);
+    return () => {
+      clearTimeout(initialLoad);
+      clearInterval(interval);
+    };
+  }, [loadBackendData, isBackendConnected]);
+
   const filteredReports = useMemo(() => {
     return reports.filter((item) => {
-      // Type match
       if (selectedType !== "all" && item.disasterType !== selectedType) return false;
-      // Status match
-      if (selectedStatus !== "all" && item.status !== selectedStatus) return false;
-      // Severity match (map backend verdict to status, or use severity field)
+      if (selectedStatus !== "all") {
+        if (selectedStatus === "flagged" || selectedStatus === "rejected") {
+          if (item.verdict !== "rejected" && item.status !== "flagged") return false;
+        } else if (selectedStatus === "verified") {
+          if (item.verdict !== "verified" && item.status !== "verified") return false;
+        } else if (selectedStatus === "pending" || selectedStatus === "review") {
+          if (item.verdict !== "review" && item.status !== "pending") return false;
+        } else if (selectedStatus === "duplicate") {
+          if (item.status !== "duplicate" && !item.duplicateOf) return false;
+        }
+      }
       if (selectedSeverity !== "all" && item.severity !== selectedSeverity) return false;
-      // Search query match
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
-        const matchesTitle = item.title?.toLowerCase().includes(query);
-        const matchesLocation = item.district?.toLowerCase().includes(query);
-        const matchesId = item.report_id?.toLowerCase().includes(query) || item.id?.toLowerCase().includes(query);
-        return matchesTitle || matchesLocation || matchesId;
+        return [
+          item.title,
+          item.location,
+          item.district,
+          item.id,
+          item.disasterType,
+          item.description,
+        ].some((value) => value?.toLowerCase().includes(query));
       }
       return true;
     });
   }, [reports, selectedType, selectedStatus, selectedSeverity, searchQuery]);
 
-  // Priority alerts (verified high/critical incidents)
-  const priorityAlerts = useMemo(() => {
-    return incidents
-      .filter((i) => i.priority && ["HIGH", "CRITICAL"].includes(i.priority))
-      .slice(0, 8);
-  }, [incidents]);
+  const priorityAlerts = useMemo(
+    () =>
+      reports
+        .filter(
+          (report) =>
+            (report.severity === "critical" || report.severity === "high") &&
+            report.status !== "flagged" &&
+            report.verdict !== "rejected"
+        )
+        .slice(0, 8),
+    [reports]
+  );
 
-  // Dashboard statistics
-  const stats = useMemo(() => calculateDashboardStats(reports), [reports]);
+  const rejectedReports = useMemo(
+    () =>
+      reports.filter(
+        (report) =>
+          report.verdict === "rejected" ||
+          report.status === "flagged" ||
+          report.checks?.provenance?.recycled
+      ),
+    [reports]
+  );
 
-  // Verification actions — now call the backend
-  const verifyReport = useCallback(async (reportId) => {
-    try {
-      // Mark as reviewed locally, backend will persist via upsert
-      setIncidents((prev) => [
-        ...prev.filter((i) => i.incident_id !== reportId),
-        {
-          ...prev.find((i) => i.incident_id === reportId),
-          status: "active",
-          priority: "HIGH",
-          confidence_score: 0.95,
-          updated_at: new Date().toISOString(),
-        },
-      ]);
-    } catch (err) {
-      console.error("verifyReport failed:", err);
-    }
-  }, []);
+  const stats = useMemo(() => {
+    const calculated = calculateDashboardStats(reports);
+    if (!backendStats || !isBackendConnected) return calculated;
+    return {
+      ...calculated,
+      total: backendStats.total_reports || calculated.total,
+      verified: backendStats.verified_reports || calculated.verified,
+      pending: backendStats.review_reports || calculated.pending,
+      flagged: backendStats.rejected_reports || calculated.flagged,
+    };
+  }, [reports, backendStats, isBackendConnected]);
 
-  const flagReport = useCallback((reportId, reason = "Disinformation / Recycled media detected") => {
-    console.warn("[flagReport] Flagging report:", reportId, reason);
-  }, []);
+  const verifyReport = useCallback(
+    (reportId) => {
+      setReports((prev) =>
+        prev.map((report) =>
+          report.id === reportId
+            ? {
+                ...report,
+                status: "verified",
+                verdict: "verified",
+                confidenceScore: Math.max(report.confidenceScore || 0, 0.92),
+                assignedAgent: "Ranking Agent",
+                capStatus: "DISPATCHED",
+                checks: {
+                  ...report.checks,
+                  official: {
+                    ...report.checks?.official,
+                    c1: "pass",
+                    details: "Manual EOC operator verification confirmed",
+                  },
+                },
+              }
+            : report
+        )
+      );
+      if (selectedIncident?.id === reportId) {
+        setSelectedIncident((previous) => ({
+          ...previous,
+          status: "verified",
+          verdict: "verified",
+          confidenceScore: 0.95,
+          capStatus: "DISPATCHED",
+        }));
+      }
+    },
+    [selectedIncident]
+  );
+
+  const flagReport = useCallback(
+    (reportId, reason = "Disinformation / Recycled media detected") => {
+      setReports((prev) =>
+        prev.map((report) =>
+          report.id === reportId
+            ? {
+                ...report,
+                status: "flagged",
+                verdict: "rejected",
+                confidenceScore: 0.08,
+                assignedAgent: "Verification Agent",
+                capStatus: "REJECTED",
+                reasons: [reason, ...(report.reasons || [])],
+                checks: {
+                  ...report.checks,
+                  provenance: {
+                    ...report.checks?.provenance,
+                    c3: "fail",
+                    recycled: true,
+                    details: reason,
+                  },
+                },
+              }
+            : report
+        )
+      );
+      if (selectedIncident?.id === reportId) {
+        setSelectedIncident((previous) => ({
+          ...previous,
+          status: "flagged",
+          verdict: "rejected",
+          confidenceScore: 0.08,
+          capStatus: "REJECTED",
+        }));
+      }
+    },
+    [selectedIncident]
+  );
 
   const mergeDuplicate = useCallback((reportId, targetId) => {
-    console.log("[mergeDuplicate] Merging:", reportId, "into", targetId);
+    setReports((prev) =>
+      prev.map((report) =>
+        report.id === reportId
+          ? {
+              ...report,
+              status: "duplicate",
+              duplicateOf: targetId,
+              capStatus: "MERGED",
+              assignedAgent: "Verification Agent",
+            }
+          : report
+      )
+    );
   }, []);
 
-  // Ingestion actions
-  const addSimulatedIncomingReport = useCallback(() => {
-    const randomLocations = [
-      { name: "Patna riverbank, Bihar", district: "Patna", lat: 25.6093, lon: 85.1235, type: "flood" },
-      { name: "Mandi highway, Himachal Pradesh", district: "Mandi", lat: 31.7087, lon: 76.9320, type: "landslide" },
-      { name: "Visakhapatnam beach road, Andhra Pradesh", district: "Visakhapatnam", lat: 17.7231, lon: 80.2707, type: "cyclone" },
-    ];
+  const triggerLiveIngestion = useCallback(
+    async (customParams = null) => {
+      setIsIngesting(true);
+      if (isBackendConnected) {
+        const payload = customParams || {
+          sources: ["sachet", "imd", "gdelt", "openmeteo", "mock"],
+          mock_count: 20,
+          state_or_district: "Punjab",
+        };
+        const result = await api.triggerIngestion(payload);
+        if (result.success) {
+          setLiveStreamAlert(
+            `Real-World Ingestion: Signals gathered across ${payload.sources?.length || 5} sources.`
+          );
+          await loadBackendData();
+          setTimeout(() => setLiveStreamAlert(null), 4500);
+          setIsIngesting(false);
+          return result;
+        }
+      }
 
-    const pick = randomLocations[Math.floor(Math.random() * randomLocations.length)];
+      const locations = [
+        { name: "Patna riverbank, Bihar", district: "Patna", lat: 25.6093, lon: 85.1235, type: "flood" },
+        { name: "Mandi highway, Himachal Pradesh", district: "Mandi", lat: 31.7087, lon: 76.932, type: "landslide" },
+        { name: "Visakhapatnam beach road, Andhra Pradesh", district: "Visakhapatnam", lat: 17.7231, lon: 83.3327, type: "cyclone" },
+        { name: "Thane Ghodbunder Road, Maharashtra", district: "Thane", lat: 19.26, lon: 72.96, type: "heavy_rainfall" },
+        { name: "Barmer desert belt, Rajasthan", district: "Barmer", lat: 25.75, lon: 71.39, type: "extreme_temperature" },
+      ];
+      const location = locations[Math.floor(Math.random() * locations.length)];
+      const id = `REP-LIVE-${Date.now().toString().slice(-4)}`;
+      setReports((prev) => [
+        {
+          id,
+          disasterType: location.type,
+          title: `[INFLUX DETECTED] Incident in ${location.name}`,
+          location: location.name,
+          district: location.district,
+          state: "India",
+          coordinates: [location.lon, location.lat],
+          latitude: location.lat,
+          longitude: location.lon,
+          timestamp: new Date().toISOString(),
+          source: { platform: "citizen", account: "LiveFeedWatcher", reputation: 0.85, verifiedSource: false },
+          severity: Math.random() > 0.5 ? "high" : "critical",
+          severityScore: 4.4,
+          confidenceScore: 0.72,
+          status: "pending",
+          verdict: "review",
+          clusterId: `QUEUE-SIM-${Date.now().toString().slice(-3)}`,
+          description: `Newly intercepted crowd signal in ${location.name}. Automatic C1 & C2 verification queueing.`,
+          casualties: { injured: 0, stranded: 20, evacuated: 0 },
+          checks: {
+            official: { c1: "unknown", alertId: "PENDING", details: "Evaluating SACHET alerts..." },
+            physical: { c2: "pass", rainfall_mm: 55, details: "Telemetry radar match active" },
+            provenance: { c3: "pass", recycled: false, details: "Original crowd signal" },
+            location: { c4: "pass", details: "Geotag confirmed" },
+            corroboration: { c5: "unknown", count: 1, details: "Spatial clustering underway" },
+          },
+          tags: ["Live Influx", "Auto-Ingested"],
+          assignedAgent: "Ingestion Agent",
+          capStatus: "PENDING_VERDICT",
+        },
+        ...prev,
+      ]);
+      setLiveStreamAlert(`Signal Intercepted: [${location.type.toUpperCase()}] ${location.name}`);
+      setTimeout(() => setLiveStreamAlert(null), 4500);
+      setIsIngesting(false);
+    },
+    [isBackendConnected, loadBackendData]
+  );
 
-    const newReport = {
-      report_id: `live_${Date.now()}`,
-      source: { platform: "live_ingest", reputation: 0.8 },
-      claim: {
-        hazard: pick.type,
-        text: `[LIVE] New report from ${pick.name}`,
-        claimed_place: pick.name,
-        claimed_time: new Date().toISOString(),
-      },
-      geo: { lat: pick.lat, lon: pick.lon, district: pick.district },
-      checks: {
-        official: { c1_result: "unknown" },
-        physical: { c2_result: "unknown" },
-        provenance: { c3_result: "unknown" },
-        location: { c4_result: "pass" },
-        corroboration: { c5_result: "unknown" },
-      },
-      score: 0.5,
-      verdict: "review",
-      reasons: ["Live simulated report"],
-    };
-
-    setReports((prev) => [newReport, ...prev]);
-    setLiveStreamAlert(`New Influx: [${pick.type.toUpperCase()}] ${pick.name}`);
-    setTimeout(() => setLiveStreamAlert(null), 4500);
-  }, []);
-
-  // Live simulation interval
   useEffect(() => {
-    let timer;
-    if (isSimulatingLive) {
-      timer = setInterval(() => addSimulatedIncomingReport(), 7000);
-    }
+    if (!isSimulatingLive) return undefined;
+    const timer = setInterval(() => triggerLiveIngestion(), 8000);
     return () => clearInterval(timer);
-  }, [isSimulatingLive, addSimulatedIncomingReport]);
-
-  // API trigger functions
-  const triggerBackendIngestion = useCallback(async (sources = ["mock"], mockCount = 25) => {
-    try {
-      const result = await triggerIngestion(sources, mockCount);
-      // Refresh data after ingestion
-      const freshReports = await fetchReports();
-      setReports(freshReports);
-      return result;
-    } catch (err) {
-      console.error("triggerBackendIngestion failed:", err);
-      throw err;
-    }
-  }, []);
-
-  const runDedupWorkflow = useCallback(async (epsKm = 5, timeWindowMin = 45) => {
-    try {
-      const result = await runDedup(epsKm, timeWindowMin);
-      const freshIncidents = await fetchIncidents();
-      setIncidents(freshIncidents);
-      return result;
-    } catch (err) {
-      console.error("runDedupWorkflow failed:", err);
-      throw err;
-    }
-  }, []);
+  }, [isSimulatingLive, triggerLiveIngestion]);
 
   return {
     reports,
     filteredReports,
-    incidents,
     priorityAlerts,
+    rejectedReports,
     stats,
+    backendStats,
+    isBackendConnected,
+    backendError,
+    isRefreshing,
+    isIngesting,
     searchQuery,
     setSearchQuery,
     selectedType,
@@ -211,15 +326,10 @@ export function useDisasterData() {
     isSimulatingLive,
     setIsSimulatingLive,
     liveStreamAlert,
-    loading,
-    error,
     verifyReport,
     flagReport,
     mergeDuplicate,
-    addSimulatedIncomingReport,
-    // Remote data actions
-    triggerBackendIngestion,
-    runDedupWorkflow,
-    ingestReport,
+    triggerLiveIngestion,
+    refreshBackendData: loadBackendData,
   };
 }

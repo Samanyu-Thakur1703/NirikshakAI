@@ -1,96 +1,141 @@
 /**
- * Central API client for NirikshakAI Frontend.
- * All backend calls go through this module.
- * Uses VITE_API_URL from frontend/.env, defaults to http://localhost:8000.
+ * Backend API client with direct, Vite-proxy, and /api fallback endpoints.
  */
 
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const REQUEST_TIMEOUT_MS = 6000;
 
-export async function fetchReports(params = {}) {
-  const qs = new URLSearchParams(params).toString();
-  const res = await fetch(`${BASE}/api/reports?${qs}`);
-  if (!res.ok) throw new Error('Failed to fetch reports');
-  return res.json();
-}
+async function fetchWithTimeout(url, options = {}) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-export async function fetchSingleReport(reportId) {
-  const res = await fetch(`${BASE}/api/reports/${reportId}`);
-  if (!res.ok) throw new Error('Failed to fetch report');
-  return res.json();
-}
-
-export async function fetchIncidents(params = {}) {
-  const qs = new URLSearchParams(params).toString();
-  const res = await fetch(`${BASE}/api/incidents?${qs}`);
-  if (!res.ok) throw new Error('Failed to fetch incidents');
-  return res.json();
-}
-
-export async function fetchSingleIncident(incidentId) {
-  const res = await fetch(`${BASE}/api/incidents/${incidentId}`);
-  if (!res.ok) throw new Error('Failed to fetch incident');
-  return res.json();
-}
-
-export async function fetchClusteredIncidents(limit = 50) {
-  const res = await fetch(`${BASE}/api/incidents/clusters?limit=${limit}`);
-  if (!res.ok) throw new Error('Failed to fetch clustered incidents');
-  return res.json();
-}
-
-export async function ingestReport(payload) {
-  const res = await fetch(`${BASE}/api/reports/ingest`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || 'Failed to ingest report');
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...(options.headers || {}),
+      },
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
+    }
+    return await response.json();
+  } finally {
+    clearTimeout(timeoutId);
   }
-  return res.json();
 }
 
-export async function triggerIngestion(sources = ['mock'], mockCount = 25) {
-  const res = await fetch(`${BASE}/api/reports/trigger`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sources, mock_count: mockCount }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || 'Failed to trigger ingestion');
+async function requestWithFallback(pathWithQuery, options = {}) {
+  const path = pathWithQuery.startsWith("/") ? pathWithQuery : `/${pathWithQuery}`;
+  const urls = [
+    `${API_BASE_URL}${path}`,
+    path,
+    `${API_BASE_URL}/api${path}`,
+    `/api${path}`,
+  ];
+  let lastError;
+  for (const url of urls) {
+    try {
+      return await fetchWithTimeout(url, options);
+    } catch (error) {
+      lastError = error;
+    }
   }
-  return res.json();
+  throw lastError || new Error(`Network failure connecting to ${pathWithQuery}`);
 }
 
-export async function batchIngestReports(reports) {
-  const res = await fetch(`${BASE}/api/reports/batch-ingest`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ reports }),
-  });
-  if (!res.ok) throw new Error('Failed to batch ingest reports');
-  return res.json();
-}
+export const api = {
+  baseUrl: API_BASE_URL,
 
-export async function runDedup(epsKm = 5, timeWindowMin = 45) {
-  const res = await fetch(
-    `${BASE}/api/incidents/dedup?eps_km=${epsKm}&time_window_min=${timeWindowMin}`,
-    { method: 'POST' }
-  );
-  if (!res.ok) throw new Error('Failed to run deduplication');
-  return res.json();
-}
+  async checkHealth() {
+    try {
+      return { success: true, data: await requestWithFallback("/health") };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
 
-export async function fetchHealth() {
-  const res = await fetch(`${BASE}/health`);
-  if (!res.ok) throw new Error('Health check failed');
-  return res.json();
-}
+  async getReports(params = {}) {
+    const query = new URLSearchParams();
+    if (params.verdict && params.verdict !== "all") query.append("verdict", params.verdict);
+    if (params.hazard && params.hazard !== "all") query.append("hazard", params.hazard);
+    if (params.district) query.append("district", params.district);
+    if (params.platform && params.platform !== "all") query.append("platform", params.platform);
+    query.append("limit", String(params.limit || 250));
+    try {
+      const suffix = query.toString() ? `?${query}` : "";
+      return { success: true, data: await requestWithFallback(`/reports${suffix}`) };
+    } catch (error) {
+      return { success: false, error: error.message, data: [] };
+    }
+  },
 
-export async function fetchStats() {
-  const res = await fetch(`${BASE}/api/stats/dedup`);
-  if (!res.ok) throw new Error('Failed to fetch stats');
-  return res.json();
-}
+  async getReportById(reportId) {
+    try {
+      return { success: true, data: await requestWithFallback(`/reports/${reportId}`) };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async getIncidents(params = {}) {
+    const query = new URLSearchParams();
+    if (params.status) query.append("status", params.status);
+    if (params.priority) query.append("priority", params.priority);
+    if (params.district) query.append("district", params.district);
+    query.append("limit", String(params.limit || 100));
+    try {
+      const suffix = query.toString() ? `?${query}` : "";
+      return { success: true, data: await requestWithFallback(`/incidents${suffix}`) };
+    } catch (error) {
+      return { success: false, error: error.message, data: [] };
+    }
+  },
+
+  async getStats() {
+    try {
+      return { success: true, data: await requestWithFallback("/stats") };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async triggerIngestion(payload = {}) {
+    const body = {
+      sources: payload.sources || ["sachet", "imd", "gdelt", "openmeteo", "mock"],
+      mock_count: payload.mock_count || 20,
+      state_or_district: payload.state_or_district || "Punjab",
+    };
+    try {
+      return {
+        success: true,
+        data: await requestWithFallback("/reports/trigger", {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+      };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  async triggerDedup(params = {}) {
+    const query = new URLSearchParams({
+      eps_km: String(params.eps_km || 5),
+      time_window_min: String(params.time_window_min || 45),
+      limit: String(params.limit || 200),
+    });
+    try {
+      return {
+        success: true,
+        data: await requestWithFallback(`/dedup?${query}`, { method: "POST" }),
+      };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+};

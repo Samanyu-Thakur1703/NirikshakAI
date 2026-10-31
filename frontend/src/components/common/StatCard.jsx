@@ -7,57 +7,67 @@ export function StatCard({
   subtext,
   icon: Icon,
   badgeText,
-  badgeColor = "emerald",
-  accentColor = "cyan",
+  badgeColor = "teal",
+  accentColor = "teal",
   trend,
   onClick,
 }) {
   const accentBorder = {
-    cyan: "hover:border-cyan-500/50",
-    emerald: "hover:border-emerald-500/50",
-    amber: "hover:border-amber-500/50",
-    purple: "hover:border-purple-500/50",
-    rose: "hover:border-rose-500/50",
-  }[accentColor] || "hover:border-slate-600";
+    teal: "hover:border-teal-400/60 hover:shadow-teal-950/40",
+    gold: "hover:border-amber-400/60 hover:shadow-amber-950/40",
+    orange: "hover:border-[#ff5f1f]/60 hover:shadow-orange-950/40",
+    cyan: "hover:border-cyan-500/50 hover:shadow-cyan-950/40",
+    emerald: "hover:border-emerald-500/50 hover:shadow-emerald-950/40",
+    amber: "hover:border-amber-500/50 hover:shadow-amber-950/40",
+    rose: "hover:border-rose-500/50 hover:shadow-rose-950/40",
+  }[accentColor] || "hover:border-teal-500/40";
 
   const iconBg = {
+    teal: "bg-teal-500/15 text-teal-300 border-teal-500/30",
+    gold: "bg-amber-400/15 text-amber-300 border-amber-400/30",
+    orange: "bg-[#ff5f1f]/15 text-orange-300 border-orange-500/40",
     cyan: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
     emerald: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
     amber: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-    purple: "bg-purple-500/10 text-purple-400 border-purple-500/20",
     rose: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-  }[accentColor] || "bg-slate-800 text-slate-300 border-slate-700";
+  }[accentColor] || "bg-teal-950/40 text-teal-300 border-teal-800/40";
+
+  const valueColor = {
+    gold: "text-amber-300 drop-shadow-[0_0_12px_rgba(245,158,11,0.25)]",
+    orange: "text-[#ff5f1f] drop-shadow-[0_0_12px_rgba(255,95,31,0.3)]",
+    teal: "text-teal-300 drop-shadow-[0_0_10px_rgba(45,212,191,0.2)]",
+  }[accentColor] || "text-white";
 
   return (
     <div
       onClick={onClick}
-      className={`bg-slate-900/80 border border-slate-800/80 rounded-xl p-4.5 transition-all duration-200 backdrop-blur-sm ${accentBorder} ${
-        onClick ? "cursor-pointer hover:bg-slate-800/60 shadow-lg shadow-black/20" : ""
+      className={`bg-[#0A111A]/90 border border-teal-900/30 rounded-2xl p-5 transition-all duration-300 backdrop-blur-md shadow-xl ${accentBorder} ${
+        onClick ? "cursor-pointer hover:bg-[#0D1622] hover:scale-[1.01]" : ""
       }`}
     >
       <div className="flex items-start justify-between">
-        <span className="text-xs font-medium text-slate-400 tracking-wide">{title}</span>
+        <span className="text-xs font-semibold text-slate-400 tracking-wider uppercase">{title}</span>
         {Icon && (
-          <div className={`p-2 rounded-lg border ${iconBg}`}>
+          <div className={`p-2.5 rounded-xl border shadow-sm ${iconBg}`}>
             <Icon className="w-4 h-4" />
           </div>
         )}
       </div>
 
-      <div className="mt-2.5 flex items-baseline gap-2.5">
-        <span className="text-2xl font-bold tracking-tight text-white font-mono">
+      <div className="mt-3 flex items-baseline gap-2.5">
+        <span className={`text-2xl sm:text-3xl font-extrabold tracking-tight font-mono ${valueColor}`}>
           {typeof value === "number" ? formatNumber(value) : value}
         </span>
         {badgeText && (
           <span
-            className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${
-              badgeColor === "emerald"
-                ? "bg-emerald-950/60 text-emerald-300 border-emerald-800/50"
-                : badgeColor === "amber"
-                ? "bg-amber-950/60 text-amber-300 border-amber-800/50"
-                : badgeColor === "blue"
-                ? "bg-blue-950/60 text-blue-300 border-blue-800/50"
-                : "bg-rose-950/60 text-rose-300 border-rose-800/50"
+            className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+              badgeColor === "gold" || badgeColor === "amber"
+                ? "bg-amber-500/15 text-amber-300 border-amber-500/40"
+                : badgeColor === "orange" || badgeColor === "rose"
+                ? "bg-[#ff5f1f]/15 text-orange-200 border-orange-500/40"
+                : badgeColor === "teal" || badgeColor === "emerald"
+                ? "bg-teal-500/15 text-teal-300 border-teal-500/40"
+                : "bg-slate-800 text-slate-300 border-slate-700"
             }`}
           >
             {badgeText}
@@ -66,9 +76,9 @@ export function StatCard({
       </div>
 
       {(subtext || trend) && (
-        <div className="mt-2 flex items-center justify-between text-xs text-slate-400">
-          <span>{subtext}</span>
-          {trend && <span className="text-cyan-400 font-mono text-[11px]">{trend}</span>}
+        <div className="mt-2.5 flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-800/60">
+          <span className="truncate">{subtext}</span>
+          {trend && <span className="text-teal-400 font-mono text-[11px] font-semibold">{trend}</span>}
         </div>
       )}
     </div>
