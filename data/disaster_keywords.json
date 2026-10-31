@@ -1,0 +1,41 @@
+{
+  "hazards": {
+    "flood": [
+      "flood", "flooding", "flooded", "waterlogging", "submerged", "inundation",
+      "water level", "dam overflow", "river overflow", "breach", "flash flood",
+      "baadh", "jal-jamaav", "pani bhar gaya", "drowning", "deluge", "torrential",
+      "water rising", "high tide", "underpass blocked", "traffic submerged"
+    ],
+    "storm": [
+      "cyclone", "storm", "thunderstorm", "lightning", "gusty winds", "gale",
+      "heavy rain", "downpour", "squall", "cloudburst", "toofan", "aandhi",
+      "heavy downpour", "very heavy rain", "extreme rainfall", "gust"
+    ],
+    "landslide": [
+      "landslide", "mudslide", "rockfall", "debris flow", "hill collapse",
+      "bhoo-skhalan", "road blocked by rocks", "slope failure", "ghat road blocked"
+    ],
+    "earthquake": [
+      "earthquake", "tremor", "aftershock", "quake", "seismic", "richter",
+      "bhookamp", "epicenter", "shaking", "building collapse"
+    ],
+    "fire": [
+      "wildfire", "forest fire", "bushfire", "jungle fire", "aag",
+      "fire breakout", "blaze", "flames", "smoke"
+    ],
+    "heatwave": [
+      "heatwave", "loo", "extreme heat", "sunstroke", "scorching heat",
+      "record temperature", "heat alert"
+    ]
+  },
+  "emergency_indicators": [
+    "ndrf", "sdrf", "rescue", "evacuation", "red alert", "orange alert",
+    "yellow alert", "sachet", "imd warning", "danger mark", "relief camp",
+    "stranded", "casualties", "submerged vehicles", "helpline", "disaster management"
+  ],
+  "negative_keywords": [
+    "movie", "trailer", "cricket", "bollywood", "meme", "comedy",
+    "sale", "discount", "shopping", "advertisement", "game", "match",
+    "politics debate", "crypto", "stock market", "diet", "gym"
+  ]
+}
