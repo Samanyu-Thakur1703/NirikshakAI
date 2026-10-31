@@ -15,9 +15,9 @@ import { DISASTER_COLORS, SEVERITY_CONFIG, STATUS_CONFIG } from "../../data/mock
 
 export function DisasterTypeBadge({ type, size = "sm" }) {
   const config = DISASTER_COLORS[type] || {
-    bg: "bg-slate-800",
-    border: "border-slate-700",
-    text: "text-slate-300",
+    bg: "bg-teal-950/40",
+    border: "border-teal-800/50",
+    text: "text-teal-300",
     label: type || "Unknown",
   };
 
@@ -42,11 +42,11 @@ export function DisasterTypeBadge({ type, size = "sm" }) {
   };
 
   const sizeClasses =
-    size === "xs" ? "px-1.5 py-0.5 text-[10px]" : size === "lg" ? "px-3 py-1 text-xs" : "px-2 py-0.5 text-[11px]";
+    size === "xs" ? "px-2 py-0.5 text-[10px]" : size === "lg" ? "px-3.5 py-1 text-xs" : "px-2.5 py-0.5 text-[11px]";
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded font-medium border ${config.bg} ${config.border} ${config.text} ${sizeClasses}`}
+      className={`inline-flex items-center gap-1.5 rounded-full font-semibold border ${config.bg} ${config.border} ${config.text} ${sizeClasses} shadow-sm`}
     >
       {getIcon()}
       <span className="capitalize">{config.label}</span>
@@ -57,11 +57,11 @@ export function DisasterTypeBadge({ type, size = "sm" }) {
 export function SeverityBadge({ severity, size = "sm" }) {
   const config = SEVERITY_CONFIG[severity] || SEVERITY_CONFIG.medium;
   const sizeClasses =
-    size === "xs" ? "px-1.5 py-0.5 text-[10px]" : size === "lg" ? "px-3 py-1 text-xs" : "px-2 py-0.5 text-[11px]";
+    size === "xs" ? "px-2 py-0.5 text-[10px]" : size === "lg" ? "px-3.5 py-1 text-xs" : "px-2.5 py-0.5 text-[11px]";
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded font-medium border ${config.badge} ${sizeClasses}`}
+      className={`inline-flex items-center gap-1.5 rounded-full font-bold border ${config.badge} ${sizeClasses} shadow-sm`}
     >
       <span className={`w-1.5 h-1.5 rounded-full ${config.pulse} ${severity === "critical" ? "animate-pulse" : ""}`} />
       <span className="capitalize">{config.label}</span>
@@ -72,7 +72,7 @@ export function SeverityBadge({ severity, size = "sm" }) {
 export function StatusBadge({ status, size = "sm" }) {
   const config = STATUS_CONFIG[status] || STATUS_CONFIG.pending;
   const sizeClasses =
-    size === "xs" ? "px-1.5 py-0.5 text-[10px]" : size === "lg" ? "px-3 py-1 text-xs" : "px-2 py-0.5 text-[11px]";
+    size === "xs" ? "px-2 py-0.5 text-[10px]" : size === "lg" ? "px-3.5 py-1 text-xs" : "px-2.5 py-0.5 text-[11px]";
 
   const getIcon = () => {
     const iconClass = size === "xs" ? "w-3 h-3" : "w-3.5 h-3.5";
@@ -92,7 +92,7 @@ export function StatusBadge({ status, size = "sm" }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded font-medium border ${config.badge} ${sizeClasses}`}
+      className={`inline-flex items-center gap-1.5 rounded-full font-bold border ${config.badge} ${sizeClasses} shadow-sm`}
     >
       {getIcon()}
       <span>{config.label}</span>

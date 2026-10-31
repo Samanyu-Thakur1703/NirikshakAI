@@ -12,30 +12,34 @@ import {
   X,
   FileCheck,
   Sparkles,
+  Binary,
+  Search,
+  Camera,
+  Zap,
 } from "lucide-react";
 import { DisasterTypeBadge, SeverityBadge, StatusBadge } from "../components/common/Badge";
 import { formatTimeAgo, formatUtcTime } from "../utils/formatters";
 
 export function VerificationQueuePage({
   reports = [],
+  rejectedReports = [],
   onVerify,
   onFlag,
   onMerge,
   onSelectIncident,
 }) {
-  const [activeTab, setActiveTab] = useState("pending"); // "pending" | "duplicates" | "clusters"
-  const [selectedPair, setSelectedPair] = useState(null);
+  const [activeTab, setActiveTab] = useState("pending"); // "pending" | "duplicates" | "rejected"
 
-  const pendingReports = reports.filter((r) => r.status === "pending");
-  const duplicateReports = reports.filter((r) => r.status === "duplicate");
+  const pendingReports = reports.filter((r) => r.verdict === "review" || r.status === "pending");
+  const rejectedItems = rejectedReports.length > 0 ? rejectedReports : reports.filter((r) => r.verdict === "rejected" || r.status === "flagged");
 
   // Pair primary and duplicate for comparison demo
   const duplicatePairs = [
     {
       clusterId: "CLUSTER-PB-01",
       hazard: "flood",
-      primary: reports.find((r) => r.id === "REP-IN-2026-0101"),
-      secondary: reports.find((r) => r.id === "REP-IN-2026-0102"),
+      primary: reports.find((r) => r.id === "REP-IN-2026-0101" || r.id === "r_0001"),
+      secondary: reports.find((r) => r.id === "REP-IN-2026-0102" || r.id === "r_0002"),
       distanceMeters: 480,
       timeDeltaMins: 7,
       similarityScore: "89.4%",
@@ -44,86 +48,86 @@ export function VerificationQueuePage({
     {
       clusterId: "CLUSTER-MH-01",
       hazard: "heavy_rainfall",
-      primary: reports.find((r) => r.id === "REP-IN-2026-0107"),
-      secondary: reports.find((r) => r.id === "REP-IN-2026-0108"),
+      primary: reports.find((r) => r.id === "REP-IN-2026-0107" || r.id === "r_0010"),
+      secondary: reports.find((r) => r.id === "REP-IN-2026-0108" || r.id === "r_0012"),
       distanceMeters: 2800,
       timeDeltaMins: 4,
       similarityScore: "93.1%",
       recommendation: "MERGE_AS_DUPLICATE",
     },
     {
-      clusterId: "CLUSTER-DL-01",
-      hazard: "flood",
-      primary: reports.find((r) => r.id === "REP-IN-2026-0116"),
-      secondary: reports.find((r) => r.id === "REP-IN-2026-0117"),
-      distanceMeters: 720,
-      timeDeltaMins: 15,
-      similarityScore: "91.8%",
-      recommendation: "MERGE_AS_DUPLICATE",
-    },
-    {
       clusterId: "CLUSTER-KL-RECYCLED",
       hazard: "landslide",
-      primary: reports.find((r) => r.id === "REP-IN-2026-0105"),
-      secondary: reports.find((r) => r.id === "REP-IN-2026-0106"),
+      primary: reports.find((r) => r.id === "REP-IN-2026-0105" || r.id === "r_0021"),
+      secondary: reports.find((r) => r.id === "REP-IN-2026-0106" || r.id === "r_0237"),
       distanceMeters: 5600,
       timeDeltaMins: 40,
-      similarityScore: "97.4% (pHash Match to 2024 Archive)",
+      similarityScore: "97.4% (pHash Match to Archive)",
       recommendation: "FLAG_RECYCLED_FAKE",
     },
   ].filter((p) => p.primary && p.secondary);
 
   return (
     <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4.5 backdrop-blur-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Top Banner with Teal and Champagne Gold styling */}
+      <div className="bg-[#0A111A]/95 border border-teal-900/30 rounded-2xl p-5 backdrop-blur-md shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-cyan-400" />
-            Verification & GIS Deduplication Queue
+            <ShieldCheck className="w-5 h-5 text-teal-400" />
+            Verification, Deduplication & Hoax Workbench
           </h2>
-          <p className="text-xs text-slate-400">
-            Autonomous agent cross-validation, 5-pillar verification matrix, and spatio-temporal cluster deduplication
+          <p className="text-xs text-slate-400 mt-0.5">
+            Autonomous multi-agent cross-validation, 5-pillar verification matrix, and spatio-temporal cluster deduplication
           </p>
         </div>
 
         {/* Tab Controls */}
-        <div className="flex items-center bg-slate-950 border border-slate-800 rounded-lg p-1">
+        <div className="flex items-center bg-[#060D17] border border-teal-900/40 rounded-xl p-1 overflow-x-auto shadow-sm">
           <button
             onClick={() => setActiveTab("pending")}
-            className={`px-3 py-1.5 rounded text-xs font-semibold transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
               activeTab === "pending"
-                ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                ? "bg-teal-500/20 text-teal-300 border border-teal-500/40"
                 : "text-slate-400 hover:text-white"
             }`}
           >
-            Pending Review ({pendingReports.length})
+            Review Queue ({pendingReports.length})
           </button>
           <button
             onClick={() => setActiveTab("duplicates")}
-            className={`px-3 py-1.5 rounded text-xs font-semibold transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
               activeTab === "duplicates"
-                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
+                ? "bg-amber-400/20 text-amber-300 border border-amber-400/40"
                 : "text-slate-400 hover:text-white"
             }`}
           >
             Deduplication Clusters ({duplicatePairs.length})
           </button>
+          <button
+            onClick={() => setActiveTab("rejected")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === "rejected"
+                ? "bg-[#ff5f1f]/20 text-orange-200 border border-orange-500/50"
+                : "text-orange-400/80 hover:text-orange-300"
+            }`}
+          >
+            🚨 Rejected / Hoaxes ({rejectedItems.length})
+          </button>
         </div>
       </div>
 
-      {/* Main Tab Content */}
-      {activeTab === "pending" ? (
+      {/* 1. Pending Review Tab */}
+      {activeTab === "pending" && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {pendingReports.map((report) => (
               <div
                 key={report.id}
-                className="bg-slate-900/80 border border-slate-800 rounded-xl p-4.5 hover:border-slate-700 transition-all flex flex-col justify-between"
+                className="bg-[#0A111A]/95 border border-teal-900/30 rounded-2xl p-5 hover:border-teal-500/50 hover:bg-[#0D1622] transition-all flex flex-col justify-between shadow-xl"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="font-mono text-xs text-amber-400 font-bold">{report.id}</span>
+                    <span className="font-mono text-xs text-amber-300 font-bold">{report.id}</span>
                     <div className="flex items-center gap-1.5">
                       <DisasterTypeBadge type={report.disasterType} size="xs" />
                       <SeverityBadge severity={report.severity} size="xs" />
@@ -133,47 +137,47 @@ export function VerificationQueuePage({
                   <h3 className="text-sm font-bold text-white mb-1.5">{report.title}</h3>
                   <p className="text-xs text-slate-300 leading-relaxed mb-3">{report.description}</p>
 
-                  <div className="bg-slate-950/70 p-2.5 rounded-lg border border-slate-800 text-[11px] space-y-1 mb-3">
+                  <div className="bg-[#060D17] p-3 rounded-xl border border-teal-900/40 text-[11px] space-y-1.5 mb-3">
                     <div className="flex justify-between text-slate-400">
                       <span>Location:</span>
-                      <span className="text-slate-200">📍 {report.location}</span>
+                      <span className="text-slate-200 font-medium">📍 {report.location}</span>
                     </div>
                     <div className="flex justify-between text-slate-400">
                       <span>Report Source:</span>
-                      <span className="text-slate-200 capitalize">
-                        {report.source?.platform} ({report.source?.account})
+                      <span className="text-teal-300 font-medium capitalize">
+                        {report.sourceMeta?.icon} {report.sourceMeta?.name || report.source?.platform} ({report.source?.account || "Verified Citizen"})
                       </span>
                     </div>
                     <div className="flex justify-between text-slate-400">
-                      <span>Confidence Score:</span>
-                      <span className="font-mono text-amber-400 font-bold">
-                        {Math.round(report.confidenceScore * 100)}% (Pending Operator Verdict)
+                      <span>Score & Consensus:</span>
+                      <span className="font-mono text-amber-300 font-bold">
+                        Score: {(report.confidenceScore * 100).toFixed(0)}% • Lane: {report.verdict || "review"}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+                <div className="pt-3 border-t border-teal-900/30 flex items-center justify-between gap-2">
                   <button
                     onClick={() => onSelectIncident(report)}
-                    className="text-xs text-cyan-400 hover:text-cyan-300 underline font-medium"
+                    className="text-xs text-teal-400 hover:text-teal-300 underline font-semibold cursor-pointer"
                   >
                     Inspect Full Dossier
                   </button>
 
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => onFlag(report.id)}
-                      className="px-2.5 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-semibold flex items-center gap-1"
+                      onClick={() => onFlag(report.id, "Flagged by Operator in Review Queue")}
+                      className="px-3 py-1.5 rounded-xl bg-[#ff5f1f]/15 hover:bg-[#ff5f1f]/25 text-orange-200 border border-[#ff5f1f]/40 text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors active:scale-95"
                     >
                       <X className="w-3.5 h-3.5" />
                       Flag Hoax
                     </button>
                     <button
                       onClick={() => onVerify(report.id)}
-                      className="px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1 shadow-sm"
+                      className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-teal-500 to-teal-400 hover:from-teal-400 hover:to-teal-300 text-slate-950 text-xs font-bold flex items-center gap-1 shadow-md cursor-pointer transition-all active:scale-95"
                     >
-                      <Check className="w-3.5 h-3.5" />
+                      <Check className="w-3.5 h-3.5 text-slate-950" />
                       Approve & Verify
                     </button>
                   </div>
@@ -183,54 +187,56 @@ export function VerificationQueuePage({
           </div>
 
           {pendingReports.length === 0 && (
-            <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-12 text-center text-slate-400">
-              <CheckCircle className="w-10 h-10 text-emerald-400 mx-auto mb-2" />
-              <h3 className="text-sm font-semibold text-slate-200 mb-1">Queue Clear</h3>
+            <div className="bg-[#0A111A]/80 border border-teal-900/30 rounded-2xl p-12 text-center text-slate-400 shadow-xl">
+              <CheckCircle className="w-10 h-10 text-teal-400 mx-auto mb-2" />
+              <h3 className="text-sm font-bold text-slate-200 mb-1">Review Queue Clear</h3>
               <p className="text-xs text-slate-500">All incoming disaster reports have been verified or resolved.</p>
             </div>
           )}
         </div>
-      ) : (
-        /* Deduplication Comparison Workbench */
+      )}
+
+      {/* 2. Deduplication Clusters Tab */}
+      {activeTab === "duplicates" && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 gap-5">
-            {duplicatePairs.map((pair, idx) => (
+            {duplicatePairs.map((pair) => (
               <div
                 key={pair.clusterId}
-                className="bg-slate-900/80 border border-slate-800 rounded-xl overflow-hidden backdrop-blur-sm"
+                className="bg-[#0A111A]/95 border border-teal-900/30 rounded-2xl overflow-hidden backdrop-blur-md shadow-2xl"
               >
                 {/* Cluster Header */}
-                <div className="px-4 py-3 bg-slate-950 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                <div className="px-5 py-3.5 bg-[#060D17] border-b border-teal-900/30 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5">
-                    <span className="font-mono text-xs text-cyan-400 font-bold">
+                    <span className="font-mono text-xs text-teal-400 font-bold">
                       Cluster: {pair.clusterId}
                     </span>
                     <DisasterTypeBadge type={pair.hazard} size="xs" />
                     <span className="text-[11px] text-slate-400">
                       Spatial Distance: <strong className="text-white font-mono">{pair.distanceMeters}m</strong>
                     </span>
-                    <span className="text-slate-600">•</span>
+                    <span className="text-teal-700">•</span>
                     <span className="text-[11px] text-slate-400">
                       Time Delta: <strong className="text-white font-mono">{pair.timeDeltaMins} mins</strong>
                     </span>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-800/60">
+                    <span className="text-[10px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-teal-500/15 text-teal-300 border border-teal-500/30">
                       Similarity: {pair.similarityScore}
                     </span>
-                    <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-800/60">
+                    <span className="text-[10px] font-mono font-bold uppercase px-2.5 py-0.5 rounded-full bg-amber-400/15 text-amber-300 border border-amber-400/30">
                       {pair.recommendation}
                     </span>
                   </div>
                 </div>
 
                 {/* Side-by-Side Comparison Grid */}
-                <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {/* Left: Primary / Verified Incident */}
-                  <div className="bg-slate-950/80 p-3.5 rounded-lg border border-slate-800 space-y-2.5">
+                <div className="p-5 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Left: Primary Anchor Incident */}
+                  <div className="bg-[#060D17] p-4 rounded-xl border border-teal-900/40 space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-amber-300 font-bold bg-amber-400/15 px-2.5 py-0.5 rounded-full border border-amber-400/30">
                         Primary Anchor Incident
                       </span>
                       <span className="font-mono text-xs text-slate-400">{pair.primary.id}</span>
@@ -239,18 +245,18 @@ export function VerificationQueuePage({
                     <h4 className="text-xs font-bold text-slate-100">{pair.primary.title}</h4>
                     <p className="text-[11px] text-slate-300 leading-relaxed">{pair.primary.description}</p>
 
-                    <div className="text-[10px] text-slate-400 pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                    <div className="text-[10px] text-slate-400 pt-2 border-t border-teal-900/30 flex items-center justify-between">
                       <span>📍 {pair.primary.location}</span>
-                      <span className="font-mono text-emerald-400">
+                      <span className="font-mono text-amber-300 font-bold">
                         Score: {Math.round(pair.primary.confidenceScore * 100)}%
                       </span>
                     </div>
                   </div>
 
                   {/* Right: Secondary Candidate Incident */}
-                  <div className="bg-slate-950/80 p-3.5 rounded-lg border border-slate-800 space-y-2.5">
+                  <div className="bg-[#060D17] p-4 rounded-xl border border-teal-900/40 space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-teal-300 font-bold bg-teal-500/15 px-2.5 py-0.5 rounded-full border border-teal-500/30">
                         Incoming Candidate Report
                       </span>
                       <span className="font-mono text-xs text-slate-400">{pair.secondary.id}</span>
@@ -259,36 +265,117 @@ export function VerificationQueuePage({
                     <h4 className="text-xs font-bold text-slate-100">{pair.secondary.title}</h4>
                     <p className="text-[11px] text-slate-300 leading-relaxed">{pair.secondary.description}</p>
 
-                    <div className="text-[10px] text-slate-400 pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                    <div className="text-[10px] text-slate-400 pt-2 border-t border-teal-900/30 flex items-center justify-between">
                       <span>📍 {pair.secondary.location}</span>
                       <span className="font-mono text-slate-400">
-                        Status: <strong className="capitalize text-cyan-400">{pair.secondary.status}</strong>
+                        Status: <strong className="capitalize text-teal-300">{pair.secondary.status}</strong>
                       </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Action Bar */}
-                <div className="px-4 py-2.5 bg-slate-950/60 border-t border-slate-800 flex items-center justify-between">
+                <div className="px-5 py-3 bg-[#060D17]/80 border-t border-teal-900/30 flex items-center justify-between">
                   <div className="text-[11px] text-slate-400">
-                    Engine Confidence: <strong className="text-emerald-400 font-mono">94.8% match certainty</strong>
+                    Engine Confidence: <strong className="text-amber-300 font-mono">94.8% match certainty</strong>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => onSelectIncident(pair.secondary)}
-                      className="px-2.5 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium border border-slate-700"
+                      className="px-3 py-1.5 text-xs rounded-xl bg-[#0F1B28] hover:bg-[#142333] text-slate-200 font-semibold border border-teal-900/50 cursor-pointer"
                     >
                       Compare Media
                     </button>
                     <button
                       onClick={() => onMerge(pair.secondary.id, pair.primary.id)}
-                      className="px-3 py-1 text-xs rounded bg-purple-600 hover:bg-purple-500 text-white font-medium flex items-center gap-1 shadow-sm"
+                      className="px-3.5 py-1.5 text-xs rounded-xl bg-gradient-to-r from-teal-500 to-amber-500 hover:from-teal-400 hover:to-amber-400 text-slate-950 font-bold flex items-center gap-1 shadow-md cursor-pointer active:scale-95"
                     >
-                      <GitMerge className="w-3.5 h-3.5" />
+                      <GitMerge className="w-3.5 h-3.5 text-slate-950" />
                       Merge as Duplicate
                     </button>
                   </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 3. DEDICATED REJECTED / HOAX VAULT */}
+      {activeTab === "rejected" && (
+        <div className="space-y-4">
+          <div className="p-4.5 rounded-2xl bg-[#431407]/40 border border-[#ff5f1f]/50 text-xs text-orange-200 flex items-start gap-3 shadow-xl">
+            <AlertTriangle className="w-5 h-5 text-[#ff5f1f] shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold text-white block text-sm mb-0.5">
+                Rejected Reports & Hoax Detection Vault
+              </span>
+              <p className="text-orange-200/90 leading-relaxed text-[11px]">
+                These signals failed the multi-agent verification pipeline due to hard-fail flags: recycled historical media, physical sensor contradictions (e.g. claims of flood with 0.0mm precipitation), or location discrepancies &gt; 50km.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {rejectedItems.map((item) => (
+              <div
+                key={item.id}
+                className="bg-[#0A111A]/95 border border-[#ff5f1f]/30 hover:border-[#ff5f1f]/60 rounded-2xl p-5 transition-all flex flex-col justify-between shadow-2xl"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="font-mono text-xs text-[#ff5f1f] font-bold">{item.id}</span>
+                    <div className="flex items-center gap-1.5">
+                      <DisasterTypeBadge type={item.disasterType} size="xs" />
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase bg-[#ff5f1f]/20 text-orange-200 border border-orange-500/50">
+                        VERDICT: REJECTED
+                      </span>
+                    </div>
+                  </div>
+
+                  <h3 className="text-sm font-bold text-white mb-1.5">{item.title}</h3>
+                  <p className="text-xs text-slate-300 leading-relaxed mb-3">{item.description}</p>
+
+                  {/* Provenance Evidence */}
+                  <div className="p-3 rounded-xl bg-[#060D17] border border-teal-900/40 text-[11px] space-y-1.5 mb-3">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Verification Score:</span>
+                      <span className="font-mono text-[#ff5f1f] font-bold">
+                        {(item.confidenceScore * 100).toFixed(0)}% (Fail threshold &lt; 40%)
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Provenance Check (C3):</span>
+                      <span className={item.checks?.provenance?.recycled ? "text-[#ff5f1f] font-bold" : "text-slate-300"}>
+                        {item.checks?.provenance?.recycled
+                          ? `Recycled Media Flagged (${(
+                              (item.checks?.provenance?.archive_match_score || 0.95) * 100
+                            ).toFixed(0)}% match)`
+                          : item.checks?.provenance?.details || "Screened"}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Hard-Fail Reason:</span>
+                      <span className="text-orange-300 font-semibold truncate max-w-[200px]">
+                        {item.reasons?.[0] || "Sensor contradiction with satellite precipitation"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-teal-900/30 flex items-center justify-between">
+                  <span className="text-[10px] font-mono text-slate-500">
+                    Logged: {formatTimeAgo(item.timestamp)}
+                  </span>
+                  <button
+                    onClick={() => onSelectIncident(item)}
+                    className="px-3 py-1 text-xs rounded-xl bg-[#0F1B28] hover:bg-[#142333] text-orange-200 border border-[#ff5f1f]/40 font-semibold cursor-pointer"
+                  >
+                    Inspect Provenance Dossier
+                  </button>
                 </div>
               </div>
             ))}
