@@ -15,7 +15,7 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { SignInPage } from "./pages/SignInPage";
 import { SignUpPage } from "./pages/SignUpPage";
 import { useDisasterData } from "./hooks/useDisasterData";
-import { Radio, AlertCircle, Zap } from "lucide-react";
+import { Zap, Radio } from "lucide-react";
 
 function DashboardContent() {
   const [activePage, setActivePage] = useState("overview");
@@ -55,13 +55,18 @@ function DashboardContent() {
   } = useDisasterData();
 
   const pageTitles = {
-    overview: "Disaster Intelligence Command Center",
-    reports: "Live Incident Feed & Influx Stream",
-    map: "GIS Operations & Spatial Clusters Map",
-    queue: "Verification, Deduplication & Hoax Workbench",
-    analytics: "Incident Intelligence & Latency Analytics",
+    overview: "Unified Command",
+    unified_command: "Unified Command",
+    reports: "Damage Reports",
+    damage_reports: "Damage Reports",
+    map: "Early Warning & Incident Map",
+    early_warning: "Early Warning & Incident Map",
+    queue: "Dispatch & Verification Workbench",
+    dispatch: "Dispatch & Verification Workbench",
+    analytics: "Readiness Index & Analytics",
+    readiness: "Readiness Index & Analytics",
     agents: "Autonomous Multi-Agent Pipeline Console",
-    settings: "System Configuration & Protocols",
+    settings: "System Settings",
     signin: "Operator Sign In",
     signup: "Operator Registration",
   };
@@ -69,6 +74,7 @@ function DashboardContent() {
   const renderActivePage = () => {
     switch (activePage) {
       case "overview":
+      case "unified_command":
         return (
           <OverviewPage
             stats={stats}
@@ -82,6 +88,7 @@ function DashboardContent() {
           />
         );
       case "reports":
+      case "damage_reports":
         return (
           <LiveReportsPage
             reports={reports}
@@ -100,6 +107,7 @@ function DashboardContent() {
           />
         );
       case "map":
+      case "early_warning":
         return (
           <IncidentMapPage
             reports={reports}
@@ -108,6 +116,7 @@ function DashboardContent() {
           />
         );
       case "queue":
+      case "dispatch":
         return (
           <VerificationQueuePage
             reports={reports}
@@ -119,6 +128,7 @@ function DashboardContent() {
           />
         );
       case "analytics":
+      case "readiness":
         return <AnalyticsPage reports={reports} stats={stats} />;
       case "agents":
         return (
@@ -140,9 +150,19 @@ function DashboardContent() {
           />
         );
       case "signin":
-        return <SignInPage onNavigate={setActivePage} />;
+        return (
+          <SignInPage
+            onNavigateToSignUp={() => setActivePage("signup")}
+            onLoginSuccess={() => setActivePage("overview")}
+          />
+        );
       case "signup":
-        return <SignUpPage onNavigate={setActivePage} />;
+        return (
+          <SignUpPage
+            onNavigateToSignIn={() => setActivePage("signin")}
+            onSignUpSuccess={() => setActivePage("overview")}
+          />
+        );
       default:
         return (
           <OverviewPage
@@ -160,7 +180,7 @@ function DashboardContent() {
   };
 
   return (
-    <div className="flex h-screen bg-[#060A0F] text-slate-100 overflow-hidden font-sans selection:bg-teal-500/30 selection:text-teal-200">
+    <div className="flex h-screen bg-[#090D16] text-slate-100 overflow-hidden font-sans selection:bg-[#2563EB]/40 selection:text-white">
       {/* Sidebar Navigation */}
       <Sidebar
         activePage={activePage}
@@ -174,7 +194,7 @@ function DashboardContent() {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#060A0F]">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#090D16]">
         {/* Top Navigation */}
         <TopNav
           activePage={activePage}
@@ -188,7 +208,7 @@ function DashboardContent() {
           onOpenIngestConsole={() => setIsIngestModalOpen(true)}
         />
 
-        {/* Clear Backend Connection & Simulation Status Banner */}
+        {/* Operational Status Sub-Banner */}
         <SimulatedBanner
           isBackendConnected={isBackendConnected}
           backendError={backendError}
@@ -202,12 +222,12 @@ function DashboardContent() {
         />
 
         {/* Scrollable Page Body */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#060A0F]">
+        <main className="flex-1 overflow-y-auto p-3 bg-[#090D16]">
           {isInitialLoading ? (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[480px] h-full gap-4 text-center">
               <div className="relative">
-                <div className="w-12 h-12 rounded-full border-2 border-teal-500/20 border-t-teal-400 animate-spin" />
-                <Radio className="w-5 h-5 text-teal-400 absolute inset-0 m-auto animate-pulse" />
+                <div className="w-12 h-12 rounded-full border-2 border-cyan-500/20 border-t-cyan-400 animate-spin" />
+                <Radio className="w-5 h-5 text-cyan-400 absolute inset-0 m-auto animate-pulse" />
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-slate-200">Loading Disaster Intelligence Engine...</p>
@@ -222,10 +242,10 @@ function DashboardContent() {
 
       {/* Floating Influx Alert Notification */}
       {liveStreamAlert && (
-        <div className="fixed bottom-5 right-5 z-50 bg-[#071520]/95 border border-teal-400/60 text-teal-200 px-4 py-3 rounded-2xl shadow-2xl backdrop-blur-md flex items-center gap-3 animate-fade-in">
-          <Zap className="w-4 h-4 text-amber-300 fill-amber-300 shrink-0" />
+        <div className="fixed bottom-4 right-4 z-50 bg-[#0F172A] border border-[#2563EB] text-slate-200 px-3.5 py-2.5 rounded-lg shadow-xl flex items-center gap-2.5 animate-fade-in">
+          <Zap className="w-4 h-4 text-[#F59E0B] shrink-0" />
           <div className="text-xs">
-            <span className="font-bold text-white block">Real-World Influx:</span>
+            <span className="font-bold text-[#38BDF8] block">Live Telemetry Influx:</span>
             <span>{liveStreamAlert}</span>
           </div>
         </div>
