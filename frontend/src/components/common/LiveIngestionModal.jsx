@@ -3,9 +3,18 @@ import {
   X,
   Radio,
   Zap,
+  Globe,
+  Database,
   Layers,
+  Sparkles,
   CheckCircle2,
+  AlertTriangle,
   Loader2,
+  Activity,
+  Play,
+  Pause,
+  RefreshCw,
+  ExternalLink,
 } from "lucide-react";
 
 const INGEST_SOURCES = [
@@ -66,7 +75,7 @@ const INGEST_SOURCES = [
   {
     id: "mock",
     name: "Simulated Extreme Weather Seeds",
-    agency: "DisasterWatch Synthetic Benchmark",
+    agency: "NirikshakAI Synthetic Benchmark",
     icon: "🧪",
     desc: "Evaluates multi-agent resilience with seeded high-density scenario stress tests",
     tier: "Benchmark",
@@ -96,6 +105,7 @@ export function LiveIngestionModal({
   const [selectedRegion, setSelectedRegion] = useState("Punjab");
   const [recordCount, setRecordCount] = useState(25);
   const [lastIngestResult, setLastIngestResult] = useState(null);
+  const [autoStreamActive, setAutoStreamActive] = useState(false);
 
   if (!isOpen) return null;
 
@@ -118,42 +128,42 @@ export function LiveIngestionModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-[#252C2A]/60 backdrop-blur-xs">
-      <div className="relative w-full max-w-3xl rounded bg-[#FFFFFF] border border-[#E1E5E0] shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#E1E5E0] bg-[#F8F9F7]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded bg-[#183D35]/10 border border-[#183D35]/20 flex items-center justify-center text-[#183D35]">
-              <Radio className="w-4 h-4" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-3xl rounded-2xl bg-[#070D14] border border-teal-500/30 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        {/* Top Header with Champagne Gold & Teal styling */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-teal-900/40 bg-gradient-to-r from-[#091522] via-[#0D1F2D] to-[#091522]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-400/40 flex items-center justify-center shadow-lg shadow-teal-900/40">
+              <Radio className="w-5 h-5 text-teal-300 animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-[#252C2A] tracking-tight">
+                <h2 className="text-base font-bold text-slate-100 tracking-tight">
                   Real-World Data Ingestion Console
                 </h2>
-                <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-semibold bg-[#183D35]/10 text-[#183D35] border border-[#183D35]/25">
-                  Ingestion Agent
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-amber-400/15 text-amber-300 border border-amber-400/30">
+                  Agent 1 Core
                 </span>
               </div>
-              <p className="text-xs text-[#737D78]">
-                Poll official IMD nowcasts, NASA satellite radar, GDELT news & verified feeds
+              <p className="text-xs text-slate-400">
+                Poll official IMD nowcasts, NASA satellite radar, GDELT news & Bluesky social feeds
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded text-[#737D78] hover:text-[#252C2A] hover:bg-[#F3F4F0] transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors cursor-pointer"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="p-5 overflow-y-auto space-y-4 text-xs">
+        <div className="p-6 overflow-y-auto space-y-5">
           {/* Channel Multi-Select Grid */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#183D35] flex items-center gap-1.5">
+            <div className="flex items-center justify-between mb-2.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-teal-400 flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5" />
                 Select Ingestion Channels ({selectedSources.length}/{INGEST_SOURCES.length})
               </label>
@@ -161,44 +171,52 @@ export function LiveIngestionModal({
                 <button
                   type="button"
                   onClick={() => setSelectedSources(INGEST_SOURCES.map((s) => s.id))}
-                  className="text-[11px] text-[#183D35] hover:underline cursor-pointer font-medium"
+                  className="text-[11px] text-teal-400 hover:underline cursor-pointer"
                 >
                   Select All
                 </button>
-                <span className="text-[#E1E5E0]">•</span>
+                <span className="text-slate-600">•</span>
                 <button
                   type="button"
                   onClick={() => setSelectedSources([])}
-                  className="text-[11px] text-[#737D78] hover:underline cursor-pointer"
+                  className="text-[11px] text-slate-400 hover:underline cursor-pointer"
                 >
                   Clear
                 </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
               {INGEST_SOURCES.map((src) => {
                 const isSelected = selectedSources.includes(src.id);
                 return (
                   <div
                     key={src.id}
                     onClick={() => toggleSource(src.id)}
-                    className={`p-2.5 rounded border transition-colors cursor-pointer flex items-start gap-2.5 ${
+                    className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start gap-3 ${
                       isSelected
-                        ? "bg-[#183D35]/5 border-[#183D35]"
-                        : "bg-[#FFFFFF] border-[#E1E5E0] hover:border-[#183D35]/40 opacity-75"
+                        ? "bg-teal-950/40 border-teal-500/50 shadow-sm shadow-teal-950"
+                        : "bg-slate-900/40 border-slate-800/80 hover:border-slate-700 opacity-60"
                     }`}
                   >
-                    <span className="text-lg shrink-0">{src.icon}</span>
+                    <span className="text-xl shrink-0 mt-0.5">{src.icon}</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-[#252C2A]">{src.name}</span>
-                        <span className="text-[9px] font-mono px-1 py-0.2 rounded border bg-[#F3F4F0] text-[#737D78] border-[#E1E5E0]">
+                        <span className="text-xs font-semibold text-slate-200">{src.name}</span>
+                        <span
+                          className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${
+                            src.tier.includes("Official")
+                              ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
+                              : src.tier.includes("Physical")
+                              ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                              : "bg-teal-500/15 text-teal-300 border-teal-500/30"
+                          }`}
+                        >
                           {src.tier}
                         </span>
                       </div>
-                      <div className="text-[11px] text-[#737D78] mt-0.5 line-clamp-1">{src.desc}</div>
-                      <div className="text-[10px] text-[#737D78] font-mono mt-0.5">Authority: {src.agency}</div>
+                      <div className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">{src.desc}</div>
+                      <div className="text-[10px] text-slate-500 font-mono mt-1">Authority: {src.agency}</div>
                     </div>
                   </div>
                 );
@@ -207,15 +225,15 @@ export function LiveIngestionModal({
           </div>
 
           {/* Regional Target and Batch Size */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-[#E1E5E0]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-800/80">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#183D35] mb-1">
+              <label className="block text-xs font-bold uppercase tracking-wider text-teal-400 mb-1.5">
                 Target Geographic Territory
               </label>
               <select
                 value={selectedRegion}
                 onChange={(e) => setSelectedRegion(e.target.value)}
-                className="w-full bg-[#FFFFFF] border border-[#E1E5E0] rounded px-2.5 py-1.5 text-xs text-[#252C2A] focus:outline-none focus:border-[#183D35] transition-colors"
+                className="w-full bg-[#0A121D] border border-teal-900/50 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-teal-400 transition-colors"
               >
                 {TARGET_REGIONS.map((r) => (
                   <option key={r.id} value={r.id}>
@@ -226,7 +244,7 @@ export function LiveIngestionModal({
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#183D35] mb-1">
+              <label className="block text-xs font-bold uppercase tracking-wider text-teal-400 mb-1.5">
                 Batch Sample Density ({recordCount} items)
               </label>
               <input
@@ -236,9 +254,9 @@ export function LiveIngestionModal({
                 step="5"
                 value={recordCount}
                 onChange={(e) => setRecordCount(Number(e.target.value))}
-                className="w-full accent-[#183D35] h-1.5 bg-[#E1E5E0] rounded cursor-pointer mt-2"
+                className="w-full accent-teal-400 h-2 bg-slate-800 rounded-lg cursor-pointer mt-2"
               />
-              <div className="flex justify-between text-[10px] text-[#737D78] font-mono mt-1">
+              <div className="flex justify-between text-[10px] text-slate-500 font-mono mt-1">
                 <span>10 (Fast Pulse)</span>
                 <span>35 (Standard Patrol)</span>
                 <span>60 (Dense Sweep)</span>
@@ -248,15 +266,15 @@ export function LiveIngestionModal({
 
           {/* Execution Result Banner */}
           {lastIngestResult && (
-            <div className="p-3 rounded bg-[#183D35]/10 border border-[#183D35]/30 flex items-start gap-2.5">
-              <CheckCircle2 className="w-4 h-4 text-[#183D35] shrink-0 mt-0.5" />
+            <div className="p-3.5 rounded-xl bg-teal-950/40 border border-teal-500/40 flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-teal-400 shrink-0 mt-0.5" />
               <div className="text-xs">
-                <span className="font-bold text-[#183D35]">Ingestion Succeeded: </span>
-                <span className="text-[#252C2A]">
+                <span className="font-bold text-teal-300">Ingestion Succeeded: </span>
+                <span className="text-slate-300">
                   {lastIngestResult.data?.message ||
                     `Successfully polled real-world feeds. ${lastIngestResult.data?.ingested_count || recordCount} reports evaluated.`}
                 </span>
-                <div className="text-[10px] font-mono text-[#737D78] mt-0.5">
+                <div className="text-[10px] font-mono text-slate-400 mt-1">
                   Relevance Gate: Verified {lastIngestResult.data?.ingested_count || recordCount} reports •
                   Physical C1-C5 tests applied • Dashboard refreshed.
                 </div>
@@ -266,23 +284,23 @@ export function LiveIngestionModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-[#E1E5E0] bg-[#F8F9F7]">
-          <div className="flex items-center gap-1.5 text-xs text-[#737D78]">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-800/80 bg-[#060B12]">
+          <div className="flex items-center gap-2 text-xs text-slate-400">
             <span
               className={`w-2 h-2 rounded-full ${
-                backendConnected ? "bg-[#183D35]" : "bg-[#D98236]"
+                backendConnected ? "bg-emerald-400 animate-pulse" : "bg-amber-400"
               }`}
             />
-            <span className="font-mono text-[11px]">
-              {backendConnected ? "FastAPI Agent Core Connected" : "Offline Sandbox Active"}
+            <span className="font-mono">
+              {backendConnected ? "Live FastAPI Agent Core Connected" : "Offline Sandbox Active"}
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-1.5 rounded text-xs font-medium text-[#252C2A] hover:bg-[#F3F4F0] border border-[#E1E5E0] transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
             >
               Close
             </button>
@@ -290,16 +308,16 @@ export function LiveIngestionModal({
               type="button"
               onClick={handleExecute}
               disabled={isIngesting || selectedSources.length === 0}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded text-xs font-medium text-white bg-[#183D35] hover:bg-[#214D43] disabled:opacity-50 transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-teal-400 via-teal-300 to-amber-300 hover:from-teal-300 hover:to-amber-200 disabled:opacity-50 transition-all shadow-lg shadow-teal-900/30 cursor-pointer active:scale-95"
             >
               {isIngesting ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Polling Real Feeds...</span>
                 </>
               ) : (
                 <>
-                  <Zap className="w-3.5 h-3.5 text-amber-300" />
+                  <Zap className="w-4 h-4 text-slate-950 fill-slate-950" />
                   <span>Trigger Ingestion Pulse</span>
                 </>
               )}

@@ -2,85 +2,68 @@ import React, { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import {
   Layers,
-  Globe,
-  Map as MapIcon,
+  Maximize2,
+  ZoomIn,
+  ZoomOut,
   RotateCcw,
   Compass,
   Filter,
-  CheckCircle2,
-  AlertTriangle,
-  AlertOctagon,
+  Eye,
+  Activity,
+  Waves,
+  Mountain,
+  Wind,
+  CloudRain,
+  Flame,
+  Globe,
+  Map as MapIcon,
 } from "lucide-react";
 import { DISASTER_COLORS, SEVERITY_CONFIG } from "../../data/mockDisasters";
 
 /**
- * Enterprise GIS Basemap Configurations
- * Tokenless, 100% public, high-reliability Esri & OSM service endpoints
+ * Robust, 100% Free, Public GIS Basemaps
+ * Zero API keys required — Zero "API KEY REQUIRED" watermarks
  */
 
-// 1. Primary Default: Esri World Light Gray Canvas (matches #F3F4F0 neutral operational background)
-const ESRI_LIGHT_GRAY_STYLE = {
+// 1. Primary: Esri World Dark Gray Canvas (Standard for dark enterprise GIS command centers)
+const ESRI_DARK_STYLE = {
   version: 8,
   sources: {
-    "esri-light-base": {
+    "esri-dark-base": {
       type: "raster",
       tiles: [
-        "https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+        "https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
       ],
       tileSize: 256,
-      attribution: "&copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors",
+      attribution: "&copy; Esri &mdash; Esri, DeLorme, NAVTEQ",
     },
-    "esri-light-reference": {
+    "esri-dark-reference": {
       type: "raster",
       tiles: [
-        "https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
+        "https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
       ],
       tileSize: 256,
     },
   },
   layers: [
     {
-      id: "esri-light-base-layer",
+      id: "esri-dark-base-layer",
       type: "raster",
-      source: "esri-light-base",
+      source: "esri-dark-base",
       minzoom: 0,
       maxzoom: 18,
     },
     {
-      id: "esri-light-reference-layer",
+      id: "esri-dark-reference-layer",
       type: "raster",
-      source: "esri-light-reference",
+      source: "esri-dark-reference",
       minzoom: 0,
       maxzoom: 18,
     },
   ],
 };
 
-// 2. Esri World Topographic Map
-const ESRI_TOPO_STYLE = {
-  version: 8,
-  sources: {
-    "esri-topo": {
-      type: "raster",
-      tiles: [
-        "https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
-      ],
-      tileSize: 256,
-      attribution: "&copy; Esri, DeLorme, USGS, NPS",
-    },
-  },
-  layers: [
-    {
-      id: "esri-topo-layer",
-      type: "raster",
-      source: "esri-topo",
-      minzoom: 0,
-      maxzoom: 19,
-    },
-  ],
-};
-
-// 3. Esri Satellite Imagery with Country Boundaries & Major Places
+// 2. Esri Satellite Imagery Reconnaissance (Real aerial imagery for disaster damage verification)
 const ESRI_SATELLITE_STYLE = {
   version: 8,
   sources: {
@@ -118,7 +101,7 @@ const ESRI_SATELLITE_STYLE = {
   ],
 };
 
-// 4. OpenStreetMap Standard
+// 3. OpenStreetMap Standard (Public street level topology)
 const OSM_STYLE = {
   version: 8,
   sources: {
@@ -141,10 +124,9 @@ const OSM_STYLE = {
 };
 
 const MAP_STYLES = {
-  light: { name: "Light GIS", icon: Layers, style: ESRI_LIGHT_GRAY_STYLE },
-  topo: { name: "Topographic", icon: MapIcon, style: ESRI_TOPO_STYLE },
+  dark: { name: "Dark GIS", icon: Layers, style: ESRI_DARK_STYLE },
   satellite: { name: "Satellite", icon: Globe, style: ESRI_SATELLITE_STYLE },
-  osm: { name: "OSM", icon: Compass, style: OSM_STYLE },
+  osm: { name: "Streets", icon: MapIcon, style: OSM_STYLE },
 };
 
 const REGION_BOUNDS = {
@@ -168,7 +150,7 @@ export function DisasterMap({
   const markersRef = useRef([]);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [activeFilter, setActiveFilter] = useState("all");
-  const [activeStyleKey, setActiveStyleKey] = useState("light");
+  const [activeStyleKey, setActiveStyleKey] = useState("dark");
   const [selectedRegion, setSelectedRegion] = useState("india");
 
   // Initialize Map
@@ -177,7 +159,7 @@ export function DisasterMap({
 
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
-      style: ESRI_LIGHT_GRAY_STYLE,
+      style: ESRI_DARK_STYLE,
       center: REGION_BOUNDS.india.center,
       zoom: REGION_BOUNDS.india.zoom,
       minZoom: 3.5,
@@ -185,6 +167,7 @@ export function DisasterMap({
       attributionControl: true,
     });
 
+    // Add navigation controls (Zoom + Compass)
     map.addControl(new maplibregl.NavigationControl({ showCompass: true }), "top-right");
 
     map.on("load", () => {
@@ -200,7 +183,7 @@ export function DisasterMap({
     };
   }, []);
 
-  // Handle map style switching
+  // Handle map style switching (Dark GIS, Satellite Recon, OSM Streets)
   const handleStyleChange = (styleKey) => {
     if (!mapRef.current || styleKey === activeStyleKey) return;
     setActiveStyleKey(styleKey);
@@ -210,7 +193,7 @@ export function DisasterMap({
     }
   };
 
-  // Resize listener
+  // Resize listener to prevent gray tiles or clipped canvas
   useEffect(() => {
     const handleResize = () => {
       if (mapRef.current) {
@@ -225,12 +208,12 @@ export function DisasterMap({
     };
   }, [fullHeight]);
 
-  // Update incident markers
+  // Update incident markers whenever incidents, activeFilter, or mapLoaded changes
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded) return;
 
-    // Clear previous markers
+    // Remove previous markers
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
 
@@ -240,42 +223,39 @@ export function DisasterMap({
     });
 
     visibleIncidents.forEach((item) => {
+      // Defensive coordinate validation: ensure longitude and latitude are valid numbers
       const lng = Number(item.longitude);
       const lat = Number(item.latitude);
       if (isNaN(lng) || isNaN(lat) || (lng === 0 && lat === 0)) return;
 
       const isSelected = selectedIncident && selectedIncident.id === item.id;
+      const config = DISASTER_COLORS[item.disasterType] || { hex: "#38bdf8", label: item.disasterType };
       const isCritical = item.severity === "critical";
       const isHigh = item.severity === "high";
 
-      // Color mapping aligned with Enterprise Palette:
-      // Critical -> #C94C4C, Warning/High -> #D98236, Verified/Standard -> #183D35
-      let markerColor = "#183D35";
-      if (isCritical) {
-        markerColor = "#C94C4C";
-      } else if (isHigh || item.verdict === "pending_review") {
-        markerColor = "#D98236";
-      } else if (item.verdict === "rejected") {
-        markerColor = "#737D78";
-      }
-
-      const sizePx = isCritical ? 30 : isHigh ? 24 : 18;
-
+      // Marker element
       const el = document.createElement("div");
-      el.className = "cursor-pointer transition-transform duration-150 hover:scale-125 z-10";
+      el.className = "cursor-pointer transition-transform duration-200 hover:scale-125 z-10";
 
-      // Enterprise clean marker (no neon glow, solid high-contrast borders)
+      // Calculate size based on severity
+      const sizePx = isCritical ? 34 : isHigh ? 28 : 22;
+      const markerColor = isCritical ? "#ff5f1f" : (item.verdict === "verified" || item.confidenceScore >= 0.9) ? "#d4af37" : config.hex;
+
       const pulseHtml = isCritical
-        ? `<span class="absolute -inset-1.5 rounded-full animate-ping opacity-60" style="background-color: #C94C4C;"></span>`
+        ? `<span class="absolute -inset-2 rounded-full animate-ping opacity-75" style="background-color: #ff5f1f;"></span>`
+        : isHigh
+        ? `<span class="absolute -inset-1 rounded-full animate-pulse opacity-50" style="background-color: ${markerColor};"></span>`
         : "";
 
       el.innerHTML = `
         <div class="relative flex items-center justify-center" style="width: ${sizePx}px; height: ${sizePx}px;">
           ${pulseHtml}
-          <div class="relative flex items-center justify-center rounded-full border-2 bg-white shadow-sm" 
-               style="width: ${sizePx}px; height: ${sizePx}px; border-color: ${isSelected ? "#183D35" : markerColor};">
-            <span class="rounded-full" style="width: ${sizePx * 0.55}px; height: ${
-        sizePx * 0.55
+          <div class="relative flex items-center justify-center rounded-full shadow-xl border-2"
+               style="width: ${sizePx}px; height: ${sizePx}px; background-color: ${markerColor}28; border-color: ${
+        isSelected ? "#ffffff" : markerColor
+      }; box-shadow: 0 0 ${isSelected ? "20px #2dd4bf" : isCritical ? "14px #ff5f1f" : "10px " + markerColor + "aa"};">
+            <span class="rounded-full" style="width: ${sizePx * 0.45}px; height: ${
+        sizePx * 0.45
       }px; background-color: ${markerColor};"></span>
           </div>
         </div>
@@ -283,31 +263,32 @@ export function DisasterMap({
 
       // Source meta
       const srcName = item.sourceMeta?.name || (item.source?.platform ? item.source.platform.toUpperCase() : "Multi-Feed");
+      const srcIcon = item.sourceMeta?.icon || "📍";
 
       // Popup preview on hover
       const popupHtml = `
-        <div class="p-3 max-w-[260px] text-xs font-sans bg-white border border-[#E1E5E0] shadow-md rounded">
-          <div class="flex items-center gap-1.5 mb-1.5 pb-1 border-b border-[#E1E5E0]">
-            <span class="w-2 h-2 rounded-full" style="background-color: ${markerColor}"></span>
-            <span class="font-bold uppercase tracking-wider text-[10px] text-[#252C2A]">${item.disasterType?.replace("_", " ")}</span>
-            <span class="ml-auto text-[9px] font-mono font-bold px-1.5 py-0.2 rounded ${
-              isCritical
-                ? "bg-[#C94C4C]/10 text-[#C94C4C] border border-[#C94C4C]/30"
-                : "bg-[#F3F4F0] text-[#737D78] border border-[#E1E5E0]"
-            }">${item.severity?.toUpperCase()}</span>
+        <div class="p-3 max-w-[250px] text-xs font-sans">
+          <div class="flex items-center gap-1.5 mb-1.5">
+            <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${markerColor}"></span>
+            <span class="font-bold uppercase tracking-wider text-[10px]" style="color: ${markerColor}">${
+        item.disasterType
+      }</span>
+            <span class="ml-auto text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
+              isCritical ? "bg-[#ff5f1f]/20 text-orange-200 border border-orange-500/40" : "bg-slate-800 text-slate-300"
+            }">${item.severity.toUpperCase()}</span>
           </div>
-          <div class="font-semibold text-[#252C2A] leading-snug mb-1 text-xs">${item.title}</div>
-          <div class="text-[11px] text-[#737D78] flex items-center gap-1">📍 ${item.location || item.district || "Coordinates Marked"}</div>
-          
-          <div class="flex items-center justify-between text-[10px] font-mono mt-2 pt-1.5 border-t border-[#E1E5E0]">
-            <span class="text-[#183D35] font-bold">Confidence: ${Math.round((item.confidenceScore || 0.85) * 100)}%</span>
-            <span class="text-[#737D78]">${srcName}</span>
+          <div class="font-bold text-white leading-snug mb-1 text-xs">${item.title}</div>
+          <div class="text-[11px] text-slate-300 flex items-center gap-1">📍 ${item.location || item.district || "Coordinates Marked"}</div>
+
+          <div class="flex items-center justify-between text-[10px] font-mono mt-2 pt-2 border-t border-teal-900/40">
+            <span class="text-amber-300 font-bold">Confidence: ${Math.round((item.confidenceScore || 0.85) * 100)}%</span>
+            <span class="text-teal-400 font-semibold flex items-center gap-1">${srcIcon} ${srcName}</span>
           </div>
         </div>
       `;
 
       const popup = new maplibregl.Popup({
-        offset: 14,
+        offset: 16,
         closeButton: false,
         className: "disaster-map-popup",
       }).setHTML(popupHtml);
@@ -317,6 +298,7 @@ export function DisasterMap({
         .setPopup(popup)
         .addTo(map);
 
+      // Event listeners
       el.addEventListener("mouseenter", () => marker.togglePopup());
       el.addEventListener("mouseleave", () => marker.togglePopup());
       el.addEventListener("click", () => {
@@ -325,7 +307,7 @@ export function DisasterMap({
         }
         map.flyTo({
           center: [lng, lat],
-          zoom: Math.max(map.getZoom(), 8.0),
+          zoom: Math.max(map.getZoom(), 8.5),
           speed: 1.2,
           curve: 1.4,
           essential: true,
@@ -336,7 +318,7 @@ export function DisasterMap({
     });
   }, [incidents, mapLoaded, activeFilter, selectedIncident, onSelectIncident, activeStyleKey]);
 
-  // Center on selected incident
+  // Center on selected incident if triggered externally
   useEffect(() => {
     if (!selectedIncident || !mapRef.current) return;
     const lng = Number(selectedIncident.longitude);
@@ -344,13 +326,14 @@ export function DisasterMap({
     if (!isNaN(lng) && !isNaN(lat) && (lng !== 0 || lat !== 0)) {
       mapRef.current.flyTo({
         center: [lng, lat],
-        zoom: 8.5,
-        speed: 1.3,
+        zoom: 9.0,
+        speed: 1.4,
         essential: true,
       });
     }
   }, [selectedIncident]);
 
+  // Region pan helper
   const handleRegionChange = (regionKey) => {
     setSelectedRegion(regionKey);
     const region = REGION_BOUNDS[regionKey];
@@ -370,22 +353,22 @@ export function DisasterMap({
 
   return (
     <div
-      className={`relative w-full rounded border border-[#E1E5E0] bg-[#FFFFFF] overflow-hidden ${
-        fullHeight ? "h-full min-h-[560px]" : "h-[460px] sm:h-[500px]"
+      className={`relative w-full rounded-xl overflow-hidden border border-slate-800/90 bg-[#070B12] shadow-xl ${
+        fullHeight ? "h-full min-h-[580px]" : "h-[460px] sm:h-[520px]"
       } ${className}`}
     >
       {/* Map Canvas */}
       <div ref={mapContainerRef} className="w-full h-full" />
 
-      {/* Top Left: Filter Pills */}
-      <div className="absolute top-2.5 left-2.5 z-20 flex flex-wrap items-center gap-1.5 max-w-[calc(100%-90px)]">
-        <div className="bg-[#FFFFFF]/95 backdrop-blur-xs border border-[#E1E5E0] rounded p-1 flex items-center gap-1 shadow-xs overflow-x-auto max-w-full">
+      {/* Top Left Floating Bar: Disaster Filter Pills */}
+      <div className="absolute top-3 left-3 z-20 flex flex-wrap items-center gap-1.5 max-w-[calc(100%-80px)]">
+        <div className="bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-lg p-1 flex items-center gap-1 shadow-lg overflow-x-auto max-w-full">
           <button
             onClick={() => setActiveFilter("all")}
-            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors cursor-pointer ${
+            className={`px-2.5 py-1 rounded text-[11px] font-medium transition-all cursor-pointer ${
               activeFilter === "all"
-                ? "bg-[#183D35] text-white"
-                : "text-[#737D78] hover:text-[#252C2A] hover:bg-[#F3F4F0]"
+                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/50"
+                : "text-slate-400 hover:text-slate-200"
             }`}
           >
             All Hazards ({incidents.length})
@@ -398,23 +381,23 @@ export function DisasterMap({
               <button
                 key={type}
                 onClick={() => setActiveFilter(type)}
-                className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer ${
+                className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition-all cursor-pointer ${
                   activeFilter === type
-                    ? "bg-[#183D35] text-white"
-                    : "text-[#737D78] hover:text-[#252C2A] hover:bg-[#F3F4F0]"
+                    ? `${cfg.bg} ${cfg.text} border ${cfg.border}`
+                    : "text-slate-400 hover:text-slate-200"
                 }`}
               >
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cfg.hex }} />
                 <span className="capitalize">{cfg.label}</span>
-                <span className="font-mono text-[11px] opacity-80">({count})</span>
+                <span className="font-mono text-[10px] text-slate-400">({count})</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Top Right: Basemap Selector */}
-      <div className="absolute top-2.5 right-14 z-20 hidden sm:flex items-center bg-[#FFFFFF]/95 backdrop-blur-xs border border-[#E1E5E0] rounded p-1 shadow-xs">
+      {/* Top Right: Basemap Style Selector */}
+      <div className="absolute top-3 right-14 z-20 hidden sm:flex items-center bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-lg p-1 shadow-lg">
         {Object.entries(MAP_STYLES).map(([key, item]) => {
           const Icon = item.icon;
           const isActive = activeStyleKey === key;
@@ -423,13 +406,13 @@ export function DisasterMap({
               key={key}
               onClick={() => handleStyleChange(key)}
               title={`Switch to ${item.name} basemap`}
-              className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium transition-colors cursor-pointer ${
+              className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition-all cursor-pointer ${
                 isActive
-                  ? "bg-[#183D35] text-white"
-                  : "text-[#737D78] hover:text-[#252C2A] hover:bg-[#F3F4F0]"
+                  ? "bg-slate-800 text-cyan-300 border border-cyan-500/40 shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
               }`}
             >
-              <Icon className="w-3 h-3" />
+              <Icon className="w-3 h-3 text-cyan-400" />
               <span>{item.name}</span>
             </button>
           );
@@ -437,16 +420,16 @@ export function DisasterMap({
       </div>
 
       {/* Region Presets Toolbar (Bottom Left) */}
-      <div className="absolute bottom-2.5 left-2.5 z-20 flex items-center gap-1 bg-[#FFFFFF]/95 backdrop-blur-xs border border-[#E1E5E0] rounded p-1 shadow-xs text-xs">
-        <span className="px-1.5 py-0.5 text-[#737D78] font-medium text-[11px]">GIS Focus:</span>
+      <div className="absolute bottom-3 left-3 z-20 flex items-center gap-1 bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-lg p-1 shadow-lg text-[11px]">
+        <span className="px-2 py-1 text-slate-400 font-medium">GIS Focus:</span>
         {Object.keys(REGION_BOUNDS).map((key) => (
           <button
             key={key}
             onClick={() => handleRegionChange(key)}
-            className={`px-2 py-0.5 rounded capitalize font-medium transition-colors cursor-pointer text-xs ${
+            className={`px-2 py-0.5 rounded capitalize font-medium transition-colors cursor-pointer ${
               selectedRegion === key
-                ? "bg-[#183D35] text-white"
-                : "text-[#737D78] hover:text-[#252C2A] hover:bg-[#F3F4F0]"
+                ? "bg-slate-800 text-cyan-300 border border-cyan-500/40"
+                : "text-slate-400 hover:text-slate-200"
             }`}
           >
             {key}
@@ -455,72 +438,92 @@ export function DisasterMap({
         <button
           onClick={resetView}
           title="Reset to All India"
-          className="p-1 rounded text-[#737D78] hover:text-[#252C2A] hover:bg-[#F3F4F0] ml-1 cursor-pointer"
+          className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 ml-1 cursor-pointer"
         >
           <RotateCcw className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      {/* GIS Legend (Bottom Right) */}
-      <div className="absolute bottom-2.5 right-2.5 z-20 bg-[#FFFFFF]/95 backdrop-blur-xs border border-[#E1E5E0] rounded p-2.5 shadow-xs max-w-[210px] hidden sm:block text-xs">
-        <div className="flex items-center justify-between font-semibold text-[#252C2A] mb-1.5 pb-1 border-b border-[#E1E5E0]">
-          <span className="flex items-center gap-1 text-[11px] uppercase tracking-wider">
-            <Layers className="w-3.5 h-3.5 text-[#183D35]" />
+      {/* Floating Interactive Legend (Bottom Right) */}
+      <div className="absolute bottom-3 right-3 z-20 bg-slate-900/90 backdrop-blur-md border border-slate-800/90 rounded-lg p-3 shadow-xl max-w-[210px] hidden sm:block text-[11px]">
+        <div className="flex items-center justify-between font-semibold text-slate-200 mb-2 border-b border-slate-800 pb-1.5">
+          <span className="flex items-center gap-1.5">
+            <Layers className="w-3.5 h-3.5 text-cyan-400" />
             GIS Legend
           </span>
-          <span className="text-[10px] font-mono text-[#737D78]">Esri Light</span>
+          <span className="text-[10px] font-mono text-emerald-400">Esri Dark GIS</span>
         </div>
 
-        <div className="space-y-1">
-          <div className="flex items-center justify-between text-[#252C2A]">
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-slate-300">
             <span className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#183D35]" />
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
               Flood
             </span>
-            <span className="font-mono text-[#737D78]">
+            <span className="font-mono text-slate-400">
               {incidents.filter((i) => i.disasterType === "flood").length}
             </span>
           </div>
 
-          <div className="flex items-center justify-between text-[#252C2A]">
+          <div className="flex items-center justify-between text-slate-300">
             <span className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#D98236]" />
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
               Landslide
             </span>
-            <span className="font-mono text-[#737D78]">
+            <span className="font-mono text-slate-400">
               {incidents.filter((i) => i.disasterType === "landslide").length}
             </span>
           </div>
 
-          <div className="flex items-center justify-between text-[#252C2A]">
+          <div className="flex items-center justify-between text-slate-300">
             <span className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#397568]" />
+              <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
               Cyclone
             </span>
-            <span className="font-mono text-[#737D78]">
+            <span className="font-mono text-slate-400">
               {incidents.filter((i) => i.disasterType === "cyclone").length}
             </span>
           </div>
 
-          <div className="flex items-center justify-between text-[#252C2A]">
+          <div className="flex items-center justify-between text-slate-300">
             <span className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#252C2A]" />
+              <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
+              Heavy Rain
+            </span>
+            <span className="font-mono text-slate-400">
+              {incidents.filter((i) => i.disasterType === "heavy_rainfall").length}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between text-slate-300">
+            <span className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
               Earthquake
             </span>
-            <span className="font-mono text-[#737D78]">
+            <span className="font-mono text-slate-400">
               {incidents.filter((i) => i.disasterType === "earthquake").length}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between text-slate-300">
+            <span className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
+              Extreme Temp
+            </span>
+            <span className="font-mono text-slate-400">
+              {incidents.filter((i) => i.disasterType === "extreme_temperature").length}
             </span>
           </div>
         </div>
 
-        <div className="mt-2 pt-1.5 border-t border-[#E1E5E0] text-[10px] text-[#737D78] space-y-1">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full border border-[#C94C4C] bg-[#C94C4C]/20" />
-            <span>Critical Severity (Pulsing)</span>
+        <div className="mt-2.5 pt-2 border-t border-slate-800 text-[10px] text-slate-400 space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full border-2 border-rose-500 bg-rose-500/30" />
+            <span>Critical (Pulsing marker)</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#183D35]" />
-            <span>Verified / Standard</span>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full border border-slate-400 bg-slate-400/30" />
+            <span>Standard marker size</span>
           </div>
         </div>
       </div>

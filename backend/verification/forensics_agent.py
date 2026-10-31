@@ -191,12 +191,13 @@ def gemini_vlm_analysis(image_path: str, prompt: str = None) -> dict:
     """Analyze image with Gemini Flash VLM."""
     try:
         import google.generativeai as genai
+        from PIL import Image
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             return {"landmarks": [], "signs": [], "scripts": [], "description": "", "error": "no_api_key"}
 
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-2.0-flash-exp")
+        model = genai.GenerativeModel("gemini-3.8-flash")
 
         img = Image.open(image_path).convert("RGB")
         response = model.generate_content([
