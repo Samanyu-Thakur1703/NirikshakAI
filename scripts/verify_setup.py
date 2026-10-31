@@ -21,7 +21,7 @@ if metadata:
 
 # Check GeoJSON
 print(f"\n[GEOJSON]")
-for name in ["india-soi.geojson", "india-composite.geojson"]:
+for name in ["india-districts.geojson", "india-composite.geojson"]:
     p = DATA_DIR / name
     if p.exists():
         data = json.load(open(p, encoding="utf-8"))
