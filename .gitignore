@@ -1,1 +1,9 @@
 /venv
+/frontend\.env
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+data/nirikshak.db
+data/cache/

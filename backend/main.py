@@ -3,9 +3,14 @@ Main FastAPI Application Entry Point for NirikshakAI.
 """
 
 from contextlib import asynccontextmanager
+from pathlib import Path
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone
+
+# Load environment variables from .env before any module reads them.
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 from backend.database import init_db, SessionLocal
 from backend.models import DisasterReport, Incident
