@@ -10,7 +10,6 @@ import {
   AlertCircle,
   Loader2,
   Info,
-  Zap,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -31,14 +30,12 @@ export function SignInPage({ onNavigateToSignUp, onLoginSuccess }) {
   const validate = () => {
     const newErrors = {};
 
-    // Email validation
     if (!formData.email.trim()) {
       newErrors.email = "Email address is required.";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
       newErrors.email = "Please enter a valid official email address.";
     }
 
-    // Password validation
     if (!formData.password) {
       newErrors.password = "Password is required.";
     } else if (formData.password.length < 6) {
@@ -97,29 +94,27 @@ export function SignInPage({ onNavigateToSignUp, onLoginSuccess }) {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-[#0A111A]/95 border border-teal-900/40 rounded-2xl p-6 sm:p-8 backdrop-blur-md shadow-2xl">
+      <div className="w-full max-w-md bg-[#0B101B] border border-[#1E293B] rounded-2xl p-6 sm:p-7 shadow-2xl">
         {/* Brand Header */}
-        <div className="flex flex-col items-center text-center mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-500 via-teal-400 to-amber-400 flex items-center justify-center shadow-lg shadow-teal-950/50 mb-3 border border-teal-300/40">
-            <ShieldAlert className="w-6 h-6 text-slate-950" />
+        <div className="flex flex-col items-center text-center mb-5">
+          <div className="w-10 h-10 rounded-xl bg-[#DC2626]/20 border border-[#DC2626]/40 flex items-center justify-center text-[#EF4444] mb-2.5">
+            <ShieldAlert className="w-5 h-5" />
           </div>
-          <h2 className="text-lg font-bold text-white tracking-tight">
-            DisasterWatch <span className="text-teal-400 font-mono">AI</span> EOC Station
+          <h2 className="text-base font-extrabold text-white tracking-tight">
+            CrisisOps EOC Command Station
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Emergency Operations Center • Multi-Agent GIS Intelligence
+          <p className="text-xs text-[#94A3B8] mt-0.5">
+            Emergency Operations Center • Multi-Agent Intelligence
           </p>
         </div>
 
         {/* Demo Mode / Backend Notice Banner */}
         {isDemoAuth && (
-          <div className="mb-5 p-3 rounded-xl bg-[#060D17] border border-amber-400/30 text-amber-200 text-xs flex items-start gap-2 shadow-sm">
-            <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <div className="mb-4 p-2.5 rounded-lg bg-[#0E1526] border border-[#1E293B] text-[#94A3B8] text-xs flex items-start gap-2">
+            <Info className="w-4 h-4 text-[#38BDF8] shrink-0 mt-0.5" />
             <div className="space-y-0.5">
-              <span className="font-bold text-white block">Official Verification Station:</span>
-              <span className="text-slate-300">
-                {authNotice} Enter credentials to access role-based command features.
-              </span>
+              <span className="font-semibold text-white block">Official Verification Station:</span>
+              <span>{authNotice} Enter credentials to access role-based command features.</span>
             </div>
           </div>
         )}
@@ -127,30 +122,29 @@ export function SignInPage({ onNavigateToSignUp, onLoginSuccess }) {
         {/* Submission Feedback Banner */}
         {submitFeedback && (
           <div
-            className={`mb-5 p-3 rounded-xl text-xs flex items-center gap-2 border ${
+            className={`mb-4 p-2.5 rounded-lg text-xs flex items-center gap-2 border ${
               submitFeedback.type === "success"
-                ? "bg-teal-950/60 border-teal-500/40 text-teal-300"
-                : "bg-[#431407]/60 border-[#ff5f1f]/60 text-orange-200"
+                ? "bg-[#10B981]/20 border-[#10B981]/40 text-[#10B981]"
+                : "bg-[#7F1D1D]/30 border-[#EF4444]/40 text-[#EF4444]"
             }`}
           >
             {submitFeedback.type === "success" ? (
-              <CheckCircle className="w-4 h-4 shrink-0 text-teal-400" />
+              <CheckCircle className="w-4 h-4 shrink-0 text-[#10B981]" />
             ) : (
-              <AlertCircle className="w-4 h-4 shrink-0 text-[#ff5f1f]" />
+              <AlertCircle className="w-4 h-4 shrink-0 text-[#EF4444]" />
             )}
             <span>{submitFeedback.message}</span>
           </div>
         )}
 
         {/* Sign In Form */}
-        <form onSubmit={handleSubmit} noValidate className="space-y-4">
-          {/* Email Field */}
+        <form onSubmit={handleSubmit} noValidate className="space-y-3.5">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5" htmlFor="email-input">
-              Authorized Email Address <span className="text-[#ff5f1f]">*</span>
+            <label className="block text-xs font-semibold text-slate-300 mb-1" htmlFor="email-input">
+              Authorized Email Address <span className="text-[#EF4444]">*</span>
             </label>
             <div className="relative">
-              <Mail className="w-4 h-4 text-teal-400/80 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Mail className="w-4 h-4 text-[#64748B] absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
                 id="email-input"
                 type="email"
@@ -160,33 +154,31 @@ export function SignInPage({ onNavigateToSignUp, onLoginSuccess }) {
                   if (errors.email) setErrors({ ...errors, email: null });
                 }}
                 placeholder="officer@ndma.gov.in"
-                className={`w-full bg-[#060D17] border rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 transition-all ${
+                className={`w-full bg-[#111827] border rounded-lg pl-8 pr-3 py-2 text-xs text-white placeholder-[#64748B] focus:outline-none transition-colors ${
                   errors.email
-                    ? "border-[#ff5f1f] focus:border-[#ff5f1f] focus:ring-orange-500/40"
-                    : "border-teal-900/50 focus:border-teal-400 focus:ring-teal-400/30"
+                    ? "border-[#EF4444]"
+                    : "border-[#1E293B] focus:border-[#38BDF8]"
                 }`}
                 aria-invalid={Boolean(errors.email)}
-                aria-describedby={errors.email ? "email-error" : undefined}
               />
             </div>
             {errors.email && (
-              <p id="email-error" className="text-[11px] text-[#ff5f1f] mt-1 flex items-center gap-1 font-semibold">
+              <p className="text-[11px] text-[#EF4444] mt-1 flex items-center gap-1 font-medium">
                 <AlertCircle className="w-3 h-3" />
                 {errors.email}
               </p>
             )}
           </div>
 
-          {/* Password Field */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center justify-between mb-1">
               <label className="text-xs font-semibold text-slate-300" htmlFor="password-input">
-                EOC Password <span className="text-[#ff5f1f]">*</span>
+                EOC Password <span className="text-[#EF4444]">*</span>
               </label>
-              <span className="text-[10px] text-amber-300 font-mono font-semibold">Demo: Password@123</span>
+              <span className="text-[10px] text-[#F59E0B] font-mono">Demo: Password@123</span>
             </div>
             <div className="relative">
-              <Lock className="w-4 h-4 text-teal-400/80 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Lock className="w-4 h-4 text-[#64748B] absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
                 id="password-input"
                 type={showPassword ? "text" : "password"}
@@ -196,18 +188,17 @@ export function SignInPage({ onNavigateToSignUp, onLoginSuccess }) {
                   if (errors.password) setErrors({ ...errors, password: null });
                 }}
                 placeholder="••••••••••••"
-                className={`w-full bg-[#060D17] border rounded-xl pl-9 pr-10 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 transition-all ${
+                className={`w-full bg-[#111827] border rounded-lg pl-8 pr-9 py-2 text-xs text-white placeholder-[#64748B] focus:outline-none transition-colors ${
                   errors.password
-                    ? "border-[#ff5f1f] focus:border-[#ff5f1f] focus:ring-orange-500/40"
-                    : "border-teal-900/50 focus:border-teal-400 focus:ring-teal-400/30"
+                    ? "border-[#EF4444]"
+                    : "border-[#1E293B] focus:border-[#38BDF8]"
                 }`}
                 aria-invalid={Boolean(errors.password)}
-                aria-describedby={errors.password ? "password-error" : undefined}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-teal-300 transition-colors cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-white transition-colors cursor-pointer"
                 title={showPassword ? "Hide password" : "Show password"}
                 tabIndex={-1}
               >
@@ -215,55 +206,52 @@ export function SignInPage({ onNavigateToSignUp, onLoginSuccess }) {
               </button>
             </div>
             {errors.password && (
-              <p id="password-error" className="text-[11px] text-[#ff5f1f] mt-1 flex items-center gap-1 font-semibold">
+              <p className="text-[11px] text-[#EF4444] mt-1 flex items-center gap-1 font-medium">
                 <AlertCircle className="w-3 h-3" />
                 {errors.password}
               </p>
             )}
           </div>
 
-          {/* Remember Me Checkbox */}
-          <div className="flex items-center justify-between pt-1">
-            <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
+          <div className="flex items-center justify-between pt-0.5">
+            <label className="flex items-center gap-2 cursor-pointer text-xs text-[#94A3B8]">
               <input
                 type="checkbox"
                 checked={formData.rememberMe}
                 onChange={(e) => setFormData({ ...formData, rememberMe: e.target.checked })}
-                className="w-4 h-4 rounded bg-[#060D17] border-teal-800 text-teal-400 focus:ring-teal-400/30 accent-teal-400"
+                className="w-3.5 h-3.5 rounded border-[#1E293B] bg-[#111827] accent-[#2563EB]"
               />
-              <span>Remember this console station</span>
+              <span>Remember this station</span>
             </label>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-2 py-3 px-4 rounded-xl bg-gradient-to-r from-teal-500 via-teal-400 to-amber-400 hover:from-teal-400 hover:to-amber-300 disabled:opacity-50 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-teal-950/40 transition-all cursor-pointer active:scale-95"
+            className="w-full mt-2 py-2.5 px-3 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-md"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 <span>Verifying Authentication...</span>
               </>
             ) : (
               <>
-                <span>Sign In to Command Center</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>Sign In to Unified Command</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </>
             )}
           </button>
         </form>
 
-        {/* Footer / Switch to Sign Up */}
-        <div className="mt-6 pt-4 border-t border-teal-900/30 text-center text-xs text-slate-400">
+        <div className="mt-5 pt-3 border-t border-[#1E293B] text-center text-xs text-[#94A3B8]">
           <span>New disaster response officer? </span>
           <button
             type="button"
             onClick={onNavigateToSignUp}
-            className="text-amber-300 hover:text-amber-200 font-bold underline underline-offset-2 ml-1 cursor-pointer"
+            className="text-[#38BDF8] hover:underline font-semibold ml-1 cursor-pointer"
           >
-            Register Operator Account
+            Register Operator Profile
           </button>
         </div>
       </div>

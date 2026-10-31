@@ -8,10 +8,6 @@ import {
   Layers,
   FileText,
   Shield,
-  Download,
-  Flame,
-  Radio,
-  ExternalLink,
   Copy,
   Camera,
   Binary,
@@ -21,7 +17,7 @@ import {
   CloudRain,
   Wind,
   Globe,
-  Zap,
+  Radio,
 } from "lucide-react";
 import { DisasterTypeBadge, SeverityBadge, StatusBadge } from "./Badge";
 import { formatTimeAgo, formatUtcTime } from "../../utils/formatters";
@@ -46,25 +42,24 @@ export function IncidentDetailModal({ incident, onClose, onVerify, onFlag, onMer
   const rainfallMm = telemetry.rainfall_mm ?? incident.checks?.physical?.rainfall_mm ?? 78.4;
   const windSpeedKmph = telemetry.wind_speed_kmph || (incident.disasterType === "cyclone" ? 65 : 42);
   const imdAlertColor = telemetry.alert_color || (incident.severity === "critical" ? "RED" : incident.severity === "high" ? "ORANGE" : "YELLOW");
-  const satelliteEvidence = telemetry.satellite_evidence ?? incident.checks?.physical?.satellite_evidence ?? true;
   const sourceMeta = incident.sourceMeta || {
-    name: incident.source?.platform ? incident.source.platform.toUpperCase() : "Citizen Mobile Dispatches",
+    name: incident.source?.platform ? incident.source.platform.toUpperCase() : "Citizen Dispatches",
     icon: "📍",
-    tier: "Tier-3 Crowd Telemetry",
+    tier: "Tier-3 Ground Telemetry",
   };
 
   // Actual CAP XML from backend or compliant fallback
   const actualCapXml = incident.cap_xml || `<?xml version="1.0" encoding="UTF-8"?>
 <alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
-  <identifier>NirikshakAI-ALERT-${incident.id}</identifier>
-  <sender>dispatch.agent@disasterwatch.ai</sender>
+  <identifier>CrisisOps-ALERT-${incident.id}</identifier>
+  <sender>dispatch.agent@crisisops.ai</sender>
   <sent>${incident.timestamp}</sent>
   <status>Actual</status>
   <msgType>Alert</msgType>
   <scope>Public</scope>
   <info>
     <category>Met</category>
-    <event>${incident.disasterType.toUpperCase()}</event>
+    <event>${incident.disasterType?.toUpperCase()}</event>
     <urgency>${incident.severity === "critical" ? "Immediate" : "Expected"}</urgency>
     <severity>${incident.severity === "critical" ? "Extreme" : incident.severity === "high" ? "Severe" : "Moderate"}</severity>
     <certainty>Observed</certainty>
@@ -93,255 +88,237 @@ export function IncidentDetailModal({ incident, onClose, onVerify, onFlag, onMer
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md overflow-y-auto animate-fade-in">
-      <div className="bg-[#070D14] border border-teal-500/30 rounded-2xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto">
-        {/* Header with Teal & Champagne Gold Styling */}
-        <div className="px-6 py-4 border-b border-teal-900/30 bg-gradient-to-r from-[#0A1420] via-[#0D1C2A] to-[#0A1420] flex items-start justify-between gap-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md overflow-y-auto">
+      <div className="bg-[#0B101B] border border-[#1E293B] rounded-2xl w-full max-w-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto text-slate-100">
+        {/* Header */}
+        <div className="px-5 py-3.5 border-b border-[#1E293B] bg-[#0E1526] flex items-start justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 flex-wrap mb-1.5">
-              <span className="font-mono text-xs text-teal-400 font-bold">{incident.id}</span>
-              <DisasterTypeBadge type={incident.disasterType} />
-              <SeverityBadge severity={incident.severity} />
-              <StatusBadge status={incident.status} />
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <span className="font-mono text-xs text-[#38BDF8] font-bold">#{incident.id}</span>
+              <DisasterTypeBadge type={incident.disasterType} size="xs" />
+              <SeverityBadge severity={incident.severity} size="xs" />
+              <StatusBadge status={incident.status} size="xs" />
               {incident.verdict && (
                 <span
                   className={`text-[10px] font-mono px-2 py-0.5 rounded-full border uppercase font-bold ${
                     incident.verdict === "verified"
-                      ? "bg-amber-400/15 text-amber-300 border-amber-400/40"
+                      ? "bg-[#10B981]/20 text-[#10B981] border-[#10B981]/40"
                       : incident.verdict === "rejected"
-                      ? "bg-[#ff5f1f]/15 text-orange-200 border-orange-500/40"
-                      : "bg-teal-500/15 text-teal-300 border-teal-500/40"
+                      ? "bg-[#EF4444]/20 text-[#EF4444] border-[#EF4444]/40"
+                      : "bg-[#F59E0B]/20 text-[#F59E0B] border-[#F59E0B]/40"
                   }`}
                 >
                   Verdict: {incident.verdict}
                 </span>
               )}
-              {incident.clusterId && (
-                <span className="text-[10px] font-mono bg-[#0B1522] text-slate-300 px-2 py-0.5 rounded-full border border-teal-900/40">
-                  Cluster: {incident.clusterId}
-                </span>
-              )}
             </div>
-            <h2 className="text-base sm:text-lg font-bold text-white leading-snug">{incident.title}</h2>
+            <h2 className="text-sm sm:text-base font-bold text-white leading-snug">{incident.title}</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#1E293B] transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto space-y-5 text-xs text-slate-300">
-          {/* CRITICAL RECYCLED MEDIA ALERT BANNER (If Recycled detected) */}
+        {/* Content Body */}
+        <div className="p-5 overflow-y-auto space-y-4 text-xs text-slate-200">
+          {/* HARD-FAIL RECYCLED MEDIA WARNING BANNER */}
           {isRecycled && (
-            <div className="p-4 rounded-2xl bg-[#431407]/70 border border-[#ff5f1f]/70 text-orange-100 space-y-2 shadow-lg">
-              <div className="flex items-center gap-2 text-[#ff5f1f] font-bold text-xs uppercase tracking-wide">
-                <AlertTriangle className="w-4 h-4 animate-pulse" />
+            <div className="p-3.5 rounded-xl bg-[#7F1D1D]/40 border border-[#EF4444]/60 text-red-200 space-y-1.5 shadow-md">
+              <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wide text-[#EF4444]">
+                <AlertTriangle className="w-4 h-4 shrink-0 animate-pulse" />
                 <span>Hard-Fail Triggered: Recycled / Fabricated Media Detected</span>
               </div>
-              <p className="text-xs text-orange-200 leading-relaxed">
-                The Verification Forensics Agent detected a high-confidence perceptual match with historical crisis imagery in the archive database. This incident has been flagged for rejection.
+              <p className="text-xs text-slate-300 leading-relaxed">
+                The Verification Forensics Agent detected a high-confidence perceptual match with historical crisis imagery in the archive database. This incident has been marked for rejection.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 font-mono text-[11px] text-orange-300">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 font-mono text-[11px] text-red-300">
                 <div>• Perceptual Similarity: <strong>{(archiveScore * 100).toFixed(1)}% match</strong></div>
                 <div>• Matched Archive ID: <strong>{archiveMatch.matched_id || incident.checks?.provenance?.details || "ARCHIVE_MATCH_CRISIS_DB"}</strong></div>
               </div>
             </div>
           )}
 
-          {/* Overview Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-[#0A121E] border border-teal-900/30 rounded-xl p-3 shadow-sm">
-              <span className="text-[11px] text-slate-400 block mb-1">Geographic Fix</span>
-              <div className="flex items-center gap-1.5 font-medium text-slate-200">
-                <MapPin className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+          {/* Section A: Geographic & Incident Overview */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+            <div className="bg-[#0E1526] border border-[#1E293B] rounded-xl p-2.5">
+              <span className="text-[10px] font-semibold text-[#64748B] uppercase tracking-wider block mb-1">Geographic Fix</span>
+              <div className="flex items-center gap-1 font-medium text-white">
+                <MapPin className="w-3.5 h-3.5 text-[#38BDF8] shrink-0" />
                 <span className="truncate">{incident.location}</span>
               </div>
-              <span className="font-mono text-[10px] text-teal-400 block mt-1">
+              <span className="font-mono text-[10px] text-[#64748B] block mt-0.5">
                 {incident.latitude ? incident.latitude.toFixed(4) : "0.0000"}°N, {incident.longitude ? incident.longitude.toFixed(4) : "0.0000"}°E
               </span>
             </div>
 
-            <div className="bg-[#0A121E] border border-teal-900/30 rounded-xl p-3 shadow-sm">
-              <span className="text-[11px] text-slate-400 block mb-1">Claimed Timestamp</span>
-              <div className="flex items-center gap-1.5 font-medium text-slate-200">
-                <Clock className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+            <div className="bg-[#0E1526] border border-[#1E293B] rounded-xl p-2.5">
+              <span className="text-[10px] font-semibold text-[#64748B] uppercase tracking-wider block mb-1">Reported Time</span>
+              <div className="flex items-center gap-1 font-medium text-white">
+                <Clock className="w-3.5 h-3.5 text-[#38BDF8] shrink-0" />
                 <span>{formatUtcTime(incident.timestamp)}</span>
               </div>
-              <span className="text-[10px] text-slate-500 block mt-1">{formatTimeAgo(incident.timestamp)}</span>
+              <span className="text-[10px] text-[#64748B] block mt-0.5">{formatTimeAgo(incident.timestamp)}</span>
             </div>
 
-            <div className="bg-[#0A121E] border border-teal-900/30 rounded-xl p-3 shadow-sm">
-              <span className="text-[11px] text-slate-400 block mb-1">Confidence Score</span>
-              <div className="flex items-center gap-1.5 font-mono text-sm font-bold text-amber-300">
-                <Shield className="w-3.5 h-3.5 text-amber-400" />
-                <span>{Math.round(incident.confidenceScore * 100)}%</span>
+            <div className="bg-[#0E1526] border border-[#1E293B] rounded-xl p-2.5">
+              <span className="text-[10px] font-semibold text-[#64748B] uppercase tracking-wider block mb-1">Confidence Score</span>
+              <div className="flex items-center gap-1 font-mono text-sm font-bold text-[#10B981]">
+                <Shield className="w-3.5 h-3.5" />
+                <span>{Math.round((incident.confidenceScore || 0.85) * 100)}%</span>
               </div>
-              <span className="text-[10px] text-slate-400 block mt-1">
-                Consensus: <strong className="uppercase text-amber-300">{incident.verdict || incident.status}</strong>
+              <span className="text-[10px] text-[#64748B] block mt-0.5">
+                Consensus: <strong className="uppercase text-white">{incident.verdict || incident.status}</strong>
               </span>
             </div>
 
-            <div className="bg-[#0A121E] border border-teal-900/30 rounded-xl p-3 shadow-sm">
-              <span className="text-[11px] text-slate-400 block mb-1">Signal Source</span>
-              <div className="flex items-center gap-1.5 font-medium text-slate-200">
-                <span className="text-base">{sourceMeta.icon}</span>
+            <div className="bg-[#0E1526] border border-[#1E293B] rounded-xl p-2.5">
+              <span className="text-[10px] font-semibold text-[#64748B] uppercase tracking-wider block mb-1">Telemetry Channel</span>
+              <div className="flex items-center gap-1.5 font-medium text-white">
+                <span>{sourceMeta.icon}</span>
                 <span className="truncate">{sourceMeta.name}</span>
               </div>
-              <span className="text-[10px] text-teal-400 font-mono block mt-1">
+              <span className="text-[10px] text-[#38BDF8] font-mono block mt-0.5">
                 {sourceMeta.tier}
               </span>
             </div>
           </div>
 
-          {/* REAL-WORLD SENSOR & METEOROLOGICAL EVIDENCE CARD (IMD & NASA SATELLITE) */}
-          <div className="border border-teal-500/30 rounded-2xl p-4 bg-gradient-to-br from-[#081320] via-[#091724] to-[#0A1A2A] shadow-md space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-teal-900/40">
-              <h4 className="text-xs font-bold text-white flex items-center gap-2">
-                <Globe className="w-4 h-4 text-teal-400" />
-                Real-World Meteorological & Satellite Verification Telemetry
+          {/* Section B: Raw Signal & Incident Claim */}
+          <div className="bg-[#0E1526] border border-[#1E293B] rounded-xl p-3">
+            <h4 className="text-[11px] font-bold text-[#38BDF8] uppercase tracking-wider mb-1">
+              Raw Signal & Incident Claim
+            </h4>
+            <p className="text-slate-200 leading-relaxed text-xs">{incident.description}</p>
+          </div>
+
+          {/* Section C: Meteorological & Sensor Ground Truth */}
+          <div className="border border-[#1E293B] rounded-xl p-3.5 bg-[#0E1526] space-y-2.5">
+            <div className="flex items-center justify-between pb-1.5 border-b border-[#1E293B]">
+              <h4 className="text-xs font-bold text-white flex items-center gap-1.5 uppercase tracking-wide">
+                <Globe className="w-3.5 h-3.5 text-[#38BDF8]" />
+                Meteorological & Sensor Ground Truth
               </h4>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/40 font-semibold">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#111827] text-[#10B981] border border-[#1E293B] font-semibold">
                 Physical C2 Proof
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {/* IMD District Alert Badge */}
-              <div className="p-3 rounded-xl bg-[#060D17] border border-teal-900/40 space-y-1">
-                <span className="text-[10px] text-slate-400 block font-semibold uppercase tracking-wider">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div className="p-2.5 rounded-lg bg-[#111827] border border-[#1E293B]">
+                <span className="text-[10px] text-[#64748B] block font-semibold uppercase tracking-wider">
                   IMD Mausam Alert Code
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 mt-1">
                   <span
-                    className={`w-3 h-3 rounded-full ${
+                    className={`w-2 h-2 rounded-full ${
                       imdAlertColor === "RED"
-                        ? "bg-[#ff5f1f] animate-pulse shadow-md shadow-orange-900"
+                        ? "bg-[#EF4444]"
                         : imdAlertColor === "ORANGE"
-                        ? "bg-amber-400"
-                        : "bg-teal-400"
+                        ? "bg-[#F59E0B]"
+                        : "bg-[#10B981]"
                     }`}
                   />
-                  <span
-                    className={`font-mono font-bold text-xs ${
-                      imdAlertColor === "RED"
-                        ? "text-[#ff5f1f]"
-                        : imdAlertColor === "ORANGE"
-                        ? "text-amber-300"
-                        : "text-teal-300"
-                    }`}
-                  >
+                  <span className="font-mono font-bold text-xs text-white">
                     {imdAlertColor} ALERT ACTIVE
                   </span>
                 </div>
-                <div className="text-[10px] text-slate-400 font-mono">
-                  District Warning: {incident.district || incident.location}
+                <div className="text-[10px] text-[#64748B] font-mono mt-0.5">
+                  District: {incident.district || incident.location}
                 </div>
               </div>
 
-              {/* Surface Radar Rainfall */}
-              <div className="p-3 rounded-xl bg-[#060D17] border border-teal-900/40 space-y-1">
-                <span className="text-[10px] text-slate-400 block font-semibold uppercase tracking-wider flex items-center gap-1">
-                  <CloudRain className="w-3.5 h-3.5 text-teal-400" />
-                  Trailing Precipitation
+              <div className="p-2.5 rounded-lg bg-[#111827] border border-[#1E293B]">
+                <span className="text-[10px] text-[#64748B] block font-semibold uppercase tracking-wider flex items-center gap-1">
+                  <CloudRain className="w-3 h-3 text-[#38BDF8]" />
+                  Precipitation (Trailing 3h)
                 </span>
-                <div className="text-sm font-bold font-mono text-teal-300">
-                  {rainfallMm.toFixed(1)} mm / 3h
+                <div className="text-sm font-bold font-mono text-white mt-1">
+                  {rainfallMm.toFixed(1)} mm
                 </div>
-                <div className="text-[10px] text-slate-400 font-mono">
-                  Open-Meteo Physical Surface Gauge
+                <div className="text-[10px] text-[#64748B] font-mono mt-0.5">
+                  Open-Meteo Surface Gauge
                 </div>
               </div>
 
-              {/* NASA GIBS Satellite Confirmation */}
-              <div className="p-3 rounded-xl bg-[#060D17] border border-teal-900/40 space-y-1">
-                <span className="text-[10px] text-slate-400 block font-semibold uppercase tracking-wider flex items-center gap-1">
-                  <Wind className="w-3.5 h-3.5 text-amber-400" />
+              <div className="p-2.5 rounded-lg bg-[#111827] border border-[#1E293B]">
+                <span className="text-[10px] text-[#64748B] block font-semibold uppercase tracking-wider flex items-center gap-1">
+                  <Wind className="w-3 h-3 text-[#38BDF8]" />
                   NASA Satellite Recon
                 </span>
-                <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-amber-300">
-                  <CheckCircle className="w-3.5 h-3.5 text-amber-400" />
+                <div className="flex items-center gap-1 font-mono text-xs font-bold text-[#10B981] mt-1">
+                  <CheckCircle className="w-3 h-3" />
                   <span>MODIS TrueColor Confirmed</span>
                 </div>
-                <div className="text-[10px] text-slate-400 font-mono">
+                <div className="text-[10px] text-[#64748B] font-mono mt-0.5">
                   Wind Gusts: {windSpeedKmph} km/h
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Description & Claim */}
-          <div className="bg-[#0A121E] border border-teal-900/30 rounded-xl p-4 shadow-sm">
-            <h4 className="text-[11px] font-bold text-teal-400 uppercase tracking-wider mb-1.5">
-              Raw Signal & Incident Claim
-            </h4>
-            <p className="text-slate-200 leading-relaxed text-xs">{incident.description}</p>
-          </div>
-
-          {/* RECYCLED MEDIA & PROVENANCE FORENSICS SECTION */}
-          <div className="border border-teal-900/30 rounded-2xl p-4 bg-[#0A121E] space-y-3 shadow-sm">
-            <div className="flex items-center justify-between pb-2 border-b border-teal-900/30">
-              <h4 className="text-xs font-bold text-white flex items-center gap-2">
-                <Binary className="w-4 h-4 text-teal-400" />
-                Recycled Media & Image Provenance Forensics
+          {/* Section D: Recycled Media & Provenance Forensics */}
+          <div className="border border-[#1E293B] rounded-xl p-3.5 bg-[#0E1526] space-y-2.5">
+            <div className="flex items-center justify-between pb-1.5 border-b border-[#1E293B]">
+              <h4 className="text-xs font-bold text-white flex items-center gap-1.5 uppercase tracking-wide">
+                <Binary className="w-3.5 h-3.5 text-[#38BDF8]" />
+                Media Provenance & Forensics Screening
               </h4>
               <span
-                className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full font-bold uppercase ${
+                className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold uppercase ${
                   isRecycled
-                    ? "bg-[#ff5f1f]/20 text-orange-200 border border-orange-500/50"
-                    : "bg-teal-500/20 text-teal-300 border border-teal-500/40"
+                    ? "bg-[#EF4444]/20 text-[#EF4444] border border-[#EF4444]/40"
+                    : "bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40"
                 }`}
               >
                 {isRecycled ? "RECYCLED DETECTED" : "PROVENANCE PASS"}
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-              {/* pHash & Archive Match */}
-              <div className="p-3.5 rounded-xl bg-[#060D17] border border-teal-900/40 space-y-2">
-                <div className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
-                  <Search className="w-3.5 h-3.5 text-teal-400" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
+              <div className="p-2.5 rounded-lg bg-[#111827] border border-[#1E293B] space-y-1.5">
+                <div className="text-[11px] font-semibold text-slate-200 flex items-center gap-1">
+                  <Search className="w-3 h-3 text-[#38BDF8]" />
                   <span>Perceptual Hash & Archive Retrieval</span>
                 </div>
                 <div className="space-y-1 font-mono text-[11px]">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Computed pHash:</span>
-                    <span className="text-teal-300 select-all font-semibold">{phash || "N/A"}</span>
+                    <span className="text-[#64748B]">Computed pHash:</span>
+                    <span className="text-[#38BDF8] select-all font-semibold">{phash || "N/A"}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Archive Sim Match:</span>
-                    <span className={`font-bold ${isRecycled ? "text-[#ff5f1f]" : "text-teal-400"}`}>
+                    <span className="text-[#64748B]">Archive Sim Match:</span>
+                    <span className={`font-bold ${isRecycled ? "text-[#EF4444]" : "text-[#10B981]"}`}>
                       {(archiveScore * 100).toFixed(1)}% match
                     </span>
                   </div>
                   {archiveMatch.matched_id && (
                     <div className="flex justify-between text-[10px]">
-                      <span className="text-slate-400">Historical ID:</span>
+                      <span className="text-[#64748B]">Historical ID:</span>
                       <span className="text-slate-300">{archiveMatch.matched_id}</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Hardware EXIF & Metadata Integrity */}
-              <div className="p-3.5 rounded-xl bg-[#060D17] border border-teal-900/40 space-y-2">
-                <div className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
-                  <Camera className="w-3.5 h-3.5 text-amber-400" />
+              <div className="p-2.5 rounded-lg bg-[#111827] border border-[#1E293B] space-y-1.5">
+                <div className="text-[11px] font-semibold text-slate-200 flex items-center gap-1">
+                  <Camera className="w-3 h-3 text-[#F59E0B]" />
                   <span>Hardware Sensor & Camera EXIF</span>
                 </div>
                 <div className="space-y-1 font-mono text-[11px]">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Device Sensor:</span>
-                    <span className="text-slate-200 truncate max-w-[140px]">
-                      {exif.device || exif.make || "Standard Mobile Optical"}
+                    <span className="text-[#64748B]">Device Sensor:</span>
+                    <span className="text-slate-200 truncate max-w-[150px]">
+                      {exif.device || exif.make || "Standard Optical Sensor"}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Hardware GPS Tag:</span>
-                    <span className="text-teal-400">
-                      {exif.gps ? "Hardware Geotag Present" : "Standard Cell Tower Triangulation"}
+                    <span className="text-[#64748B]">Hardware GPS:</span>
+                    <span className="text-[#10B981]">
+                      {exif.gps ? "Hardware Geotag Present" : "Cell Tower Triangulation"}
                     </span>
                   </div>
                 </div>
@@ -349,109 +326,98 @@ export function IncidentDetailModal({ incident, onClose, onVerify, onFlag, onMer
             </div>
           </div>
 
-          {/* MULTI-PILLAR AUDIT ENGINE CHECKS (C1–C5) */}
-          <div className="bg-[#0A121E] border border-teal-900/30 rounded-2xl p-4 space-y-3 shadow-sm">
-            <h4 className="text-xs font-bold text-white flex items-center gap-2">
-              <Shield className="w-4 h-4 text-amber-400" />
-              NirikshakAI Multi-Pillar Proof Trail (C1 – C5 Audit Gates)
+          {/* Section E: Multi-Pillar Proof Trail (C1–C5) */}
+          <div className="bg-[#0E1526] border border-[#1E293B] rounded-xl p-3.5 space-y-2">
+            <h4 className="text-xs font-bold text-white flex items-center gap-1.5 uppercase tracking-wide">
+              <Shield className="w-3.5 h-3.5 text-[#38BDF8]" />
+              Multi-Pillar Verification Audit Matrix (C1 – C5)
             </h4>
 
-            <div className="grid grid-cols-1 gap-2">
-              {/* C1 Official */}
-              <div className="flex items-start justify-between p-3 rounded-xl bg-[#060D17] border border-teal-900/30 text-xs">
+            <div className="grid grid-cols-1 gap-1.5">
+              <div className="flex items-center justify-between p-2 rounded-lg bg-[#111827] border border-[#1E293B] text-xs">
                 <div>
                   <span className="font-semibold text-slate-200">C1: Official Government Warning Consensus</span>
-                  <p className="text-slate-400 text-[11px] mt-0.5">
+                  <p className="text-[#64748B] text-[11px]">
                     {incident.checks?.official?.details || "Cross-checked against IMD Mausam & NDMA SACHET alert IDs"}
                   </p>
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase font-bold shrink-0 ml-2 bg-amber-400/15 text-amber-300 border border-amber-400/40">
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase font-bold bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40">
                   {incident.checks?.official?.c1 || "PASS"}
                 </span>
               </div>
 
-              {/* C2 Physical */}
-              <div className="flex items-start justify-between p-3 rounded-xl bg-[#060D17] border border-teal-900/30 text-xs">
+              <div className="flex items-center justify-between p-2 rounded-lg bg-[#111827] border border-[#1E293B] text-xs">
                 <div>
                   <span className="font-semibold text-slate-200">C2: Physical Ground Truth & Weather Correlation</span>
-                  <p className="text-slate-400 text-[11px] mt-0.5">
+                  <p className="text-[#64748B] text-[11px]">
                     {incident.checks?.physical?.details || `Precipitation validated: ${rainfallMm}mm in 3h window`}
                   </p>
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase font-bold shrink-0 ml-2 bg-teal-500/20 text-teal-300 border border-teal-500/40">
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase font-bold bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40">
                   {incident.checks?.physical?.c2 || "PASS"}
                 </span>
               </div>
 
-              {/* C3 Media Provenance */}
-              <div className="flex items-start justify-between p-3 rounded-xl bg-[#060D17] border border-teal-900/30 text-xs">
+              <div className="flex items-center justify-between p-2 rounded-lg bg-[#111827] border border-[#1E293B] text-xs">
                 <div>
                   <span className="font-semibold text-slate-200">C3: Media Provenance & Forensics Screening</span>
-                  <p className="text-slate-400 text-[11px] mt-0.5">
+                  <p className="text-[#64748B] text-[11px]">
                     {incident.checks?.provenance?.details || "Perceptual hash screened against historical disaster archive"}
                   </p>
                 </div>
                 <span
-                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase font-bold shrink-0 ml-2 ${
+                  className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase font-bold ${
                     isRecycled || incident.checks?.provenance?.c3 === "fail"
-                      ? "bg-[#ff5f1f]/20 text-orange-200 border border-orange-500/50"
-                      : "bg-teal-500/20 text-teal-300 border border-teal-500/40"
+                      ? "bg-[#EF4444]/20 text-[#EF4444] border border-[#EF4444]/40"
+                      : "bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40"
                   }`}
                 >
                   {isRecycled ? "RECYCLED" : incident.checks?.provenance?.c3 || "PASS"}
                 </span>
               </div>
 
-              {/* C4 Location */}
-              <div className="flex items-start justify-between p-3 rounded-xl bg-[#060D17] border border-teal-900/30 text-xs">
+              <div className="flex items-center justify-between p-2 rounded-lg bg-[#111827] border border-[#1E293B] text-xs">
                 <div>
                   <span className="font-semibold text-slate-200">C4: Geocoding & Topographic Integrity</span>
-                  <p className="text-slate-400 text-[11px] mt-0.5">
+                  <p className="text-[#64748B] text-[11px]">
                     {incident.checks?.location?.details || "Spatial contradiction check verified"}
                   </p>
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase font-bold shrink-0 ml-2 bg-teal-500/20 text-teal-300 border border-teal-500/40">
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase font-bold bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40">
                   {incident.checks?.location?.c4 || "PASS"}
                 </span>
               </div>
 
-              {/* C5 Corroboration */}
-              <div className="flex items-start justify-between p-3 rounded-xl bg-[#060D17] border border-teal-900/30 text-xs">
+              <div className="flex items-center justify-between p-2 rounded-lg bg-[#111827] border border-[#1E293B] text-xs">
                 <div>
                   <span className="font-semibold text-slate-200">C5: Multi-Source Corroboration</span>
-                  <p className="text-slate-400 text-[11px] mt-0.5">
+                  <p className="text-[#64748B] text-[11px]">
                     {incident.checks?.corroboration?.details ||
-                      `Corroborated by ${incident.checks?.corroboration?.count || 1} independent sources`}
+                      `Corroborated by ${incident.checks?.corroboration?.count || 1} independent source(s)`}
                   </p>
                 </div>
-                <span
-                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase font-bold shrink-0 ml-2 ${
-                    (incident.checks?.corroboration?.count || 1) >= 2
-                      ? "bg-amber-400/20 text-amber-300 border border-amber-400/40"
-                      : "bg-teal-500/20 text-teal-300 border border-teal-500/40"
-                  }`}
-                >
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase font-bold bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40">
                   {(incident.checks?.corroboration?.count || 1) >= 2 ? "CORROBORATED" : "SOLITARY"}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* CAP 1.2 XML SECTION */}
-          <div className="bg-[#0A121E] border border-teal-900/30 rounded-2xl p-4 space-y-3 shadow-sm">
+          {/* Section F: CAP 1.2 XML Viewer */}
+          <div className="bg-[#0E1526] border border-[#1E293B] rounded-xl p-3.5 space-y-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-teal-400" />
-                <span className="font-semibold text-slate-200">
+                <FileText className="w-4 h-4 text-[#38BDF8]" />
+                <span className="font-semibold text-white">
                   India NDMA SACHET CAP 1.2 Protocol Alert
                 </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#060D17] text-amber-300 border border-teal-900/50">
-                  {incident.cap_xml ? "Backend Native XML" : "Draft Payload"}
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#111827] text-slate-300 border border-[#1E293B]">
+                  {incident.cap_xml ? "Backend Native XML" : "Standard Payload"}
                 </span>
               </div>
               <button
                 onClick={() => setShowCapXml(!showCapXml)}
-                className="text-[11px] text-teal-400 hover:text-teal-300 underline cursor-pointer font-medium"
+                className="text-xs text-[#38BDF8] hover:underline cursor-pointer font-medium"
               >
                 {showCapXml ? "Hide XML" : "Expand CAP XML Viewer"}
               </button>
@@ -460,36 +426,35 @@ export function IncidentDetailModal({ incident, onClose, onVerify, onFlag, onMer
             {showCapXml && (
               <div className="space-y-2">
                 <div className="relative">
-                  <pre className="bg-[#04080F] p-4 rounded-xl font-mono text-[11px] text-teal-300/90 overflow-x-auto max-h-56 border border-teal-900/40 leading-relaxed shadow-inner">
+                  <pre className="bg-[#080D17] p-3.5 rounded-lg font-mono text-[11px] text-[#38BDF8] overflow-x-auto max-h-56 border border-[#1E293B] leading-relaxed">
                     {actualCapXml}
                   </pre>
                   <button
                     onClick={copyToClipboard}
-                    className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-[#0F1D2C] hover:bg-teal-950 text-slate-200 text-[10px] flex items-center gap-1.5 border border-teal-800/60 cursor-pointer transition-colors"
+                    className="absolute top-2 right-2 px-2 py-1 rounded bg-[#1E293B] hover:bg-[#334155] text-slate-200 text-[10px] flex items-center gap-1 border border-[#334155] cursor-pointer transition-colors"
                   >
-                    <Copy className="w-3 h-3 text-teal-400" />
+                    <Copy className="w-3 h-3 text-[#38BDF8]" />
                     {copied ? "Copied!" : "Copy XML"}
                   </button>
                 </div>
 
-                {/* Simulated Dispatch Action */}
                 <div className="flex items-center justify-between pt-1 text-xs">
-                  <span className="text-[11px] text-slate-400">
-                    Dispatch Destination: <strong className="font-mono text-teal-400">sachet.ndma.gov.in/api/v1/cap</strong>
+                  <span className="text-[11px] text-[#64748B]">
+                    Dispatch Destination: <strong className="font-mono text-white">sachet.ndma.gov.in/api/v1/cap</strong>
                   </span>
                   <button
                     onClick={handleSimulateDispatch}
                     disabled={dispatched}
-                    className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-teal-500 to-amber-500 hover:from-teal-400 hover:to-amber-400 text-slate-950 font-bold text-[11px] flex items-center gap-1.5 transition-all cursor-pointer shadow-md active:scale-95"
+                    className="px-3 py-1 rounded bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-medium text-xs flex items-center gap-1 transition-colors cursor-pointer"
                   >
                     {dispatched ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-slate-950" />
+                        <Check className="w-3 h-3" />
                         <span>Simulated Dispatch Sent</span>
                       </>
                     ) : (
                       <>
-                        <Send className="w-3.5 h-3.5 text-slate-950" />
+                        <Send className="w-3 h-3" />
                         <span>Simulate Dispatch Alert</span>
                       </>
                     )}
@@ -501,10 +466,10 @@ export function IncidentDetailModal({ incident, onClose, onVerify, onFlag, onMer
         </div>
 
         {/* Footer Actions */}
-        <div className="px-6 py-4 border-t border-teal-900/30 bg-[#060D17] flex flex-wrap items-center justify-between gap-3">
-          <div className="text-[11px] text-slate-400">
+        <div className="px-5 py-3 border-t border-[#1E293B] bg-[#0E1526] flex flex-wrap items-center justify-between gap-2.5">
+          <div className="text-[11px] text-[#64748B]">
             Pipeline Verdict:{" "}
-            <span className="text-amber-300 font-bold uppercase">{incident.verdict || incident.status}</span>
+            <span className="text-white font-bold uppercase">{incident.verdict || incident.status}</span>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
@@ -514,7 +479,7 @@ export function IncidentDetailModal({ incident, onClose, onVerify, onFlag, onMer
                   onVerify?.(incident.id);
                   onClose();
                 }}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-teal-400 hover:from-teal-400 hover:to-teal-300 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-md cursor-pointer active:scale-95"
+                className="px-3.5 py-1.5 rounded-lg bg-[#10B981] hover:bg-[#059669] text-slate-950 font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
               >
                 <CheckCircle className="w-3.5 h-3.5" />
                 Confirm & Verify
@@ -527,16 +492,16 @@ export function IncidentDetailModal({ incident, onClose, onVerify, onFlag, onMer
                   onFlag?.(incident.id, "Flagged via Emergency Operator Review");
                   onClose();
                 }}
-                className="px-4 py-2 rounded-xl bg-[#ff5f1f]/15 hover:bg-[#ff5f1f]/25 text-orange-200 border border-[#ff5f1f]/50 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer active:scale-95"
+                className="px-3.5 py-1.5 rounded-lg bg-[#EF4444] hover:bg-[#DC2626] text-white font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
               >
-                <AlertTriangle className="w-3.5 h-3.5 text-[#ff5f1f]" />
+                <AlertTriangle className="w-3.5 h-3.5" />
                 Flag as Hoax
               </button>
             )}
 
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors border border-slate-700 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-[#1E293B] hover:bg-[#334155] text-slate-300 font-medium text-xs transition-colors border border-[#334155] cursor-pointer"
             >
               Close Dossier
             </button>

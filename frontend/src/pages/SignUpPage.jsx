@@ -12,7 +12,6 @@ import {
   AlertCircle,
   Loader2,
   Info,
-  Zap,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -36,39 +35,30 @@ export function SignUpPage({ onNavigateToSignIn, onSignUpSuccess }) {
   const validate = () => {
     const newErrors = {};
 
-    // Full name
     if (!formData.name.trim()) {
       newErrors.name = "Full name is required.";
     } else if (formData.name.trim().length < 2) {
       newErrors.name = "Name must be at least 2 characters long.";
     }
 
-    // Email
     if (!formData.email.trim()) {
       newErrors.email = "Email address is required.";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
       newErrors.email = "Please enter a valid official email address.";
     }
 
-    // Password complexity: at least 8 chars, at least 1 number or special char
     if (!formData.password) {
       newErrors.password = "Password is required.";
     } else if (formData.password.length < 8) {
       newErrors.password = "Password must be at least 8 characters.";
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])/.test(formData.password)) {
-      newErrors.password = "Password must contain both uppercase and lowercase letters.";
-    } else if (!/(?=.*\d)|(?=.*[!@#$%^&*])/.test(formData.password)) {
-      newErrors.password = "Password must include at least one number or symbol.";
     }
 
-    // Confirm password
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = "Confirm password is required.";
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match.";
     }
 
-    // Role
     if (!formData.role) {
       newErrors.role = "Please select an operational role.";
     }
@@ -126,89 +116,84 @@ export function SignUpPage({ onNavigateToSignIn, onSignUpSuccess }) {
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center p-4">
-      <div className="w-full max-w-lg bg-[#0A111A]/95 border border-teal-900/40 rounded-2xl p-6 sm:p-8 backdrop-blur-md shadow-2xl">
+      <div className="w-full max-w-lg bg-[#0B101B] border border-[#1E293B] rounded-2xl p-6 sm:p-7 shadow-2xl">
         {/* Header */}
         <div className="flex flex-col items-center text-center mb-5">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-500 via-teal-400 to-amber-400 flex items-center justify-center shadow-lg shadow-teal-950/50 mb-3 border border-teal-300/40">
-            <ShieldAlert className="w-6 h-6 text-slate-950" />
+          <div className="w-10 h-10 rounded-xl bg-[#DC2626]/20 border border-[#DC2626]/40 flex items-center justify-center text-[#EF4444] mb-2.5">
+            <ShieldAlert className="w-5 h-5" />
           </div>
-          <h2 className="text-lg font-bold text-white tracking-tight">
+          <h2 className="text-base font-extrabold text-white tracking-tight">
             Register Emergency Response Profile
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Authorizes access to real-world verification, de-duplication, and CAP 1.2 dispatch pipelines
+          <p className="text-xs text-[#94A3B8] mt-0.5">
+            Authorizes access to Unified Command, verification, and CAP 1.2 dispatch pipelines
           </p>
         </div>
 
-        {/* Demo Mode / Backend Notice Banner */}
         {isDemoAuth && (
-          <div className="mb-4 p-3 rounded-xl bg-[#060D17] border border-amber-400/30 text-amber-200 text-xs flex items-start gap-2 shadow-sm">
-            <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <div className="mb-4 p-2.5 rounded-lg bg-[#0E1526] border border-[#1E293B] text-[#94A3B8] text-xs flex items-start gap-2">
+            <Info className="w-4 h-4 text-[#38BDF8] shrink-0 mt-0.5" />
             <div className="space-y-0.5">
-              <span className="font-bold text-white block">Operator Access:</span>
-              <span className="text-slate-300">
-                {authNotice} New registrations are provisioned for demo access with role-based permissions.
-              </span>
+              <span className="font-semibold text-white block">Operational Provisioning:</span>
+              <span>{authNotice} Enter your details to create an operator profile.</span>
             </div>
           </div>
         )}
 
-        {/* Submission Feedback Banner */}
         {submitFeedback && (
           <div
-            className={`mb-4 p-3 rounded-xl text-xs flex items-center gap-2 border ${
+            className={`mb-4 p-2.5 rounded-lg text-xs flex items-center gap-2 border ${
               submitFeedback.type === "success"
-                ? "bg-teal-950/60 border-teal-500/40 text-teal-300"
-                : "bg-[#431407]/60 border-[#ff5f1f]/60 text-orange-200"
+                ? "bg-[#10B981]/20 border-[#10B981]/40 text-[#10B981]"
+                : "bg-[#7F1D1D]/30 border-[#EF4444]/40 text-[#EF4444]"
             }`}
           >
             {submitFeedback.type === "success" ? (
-              <CheckCircle className="w-4 h-4 shrink-0 text-teal-400" />
+              <CheckCircle className="w-4 h-4 shrink-0 text-[#10B981]" />
             ) : (
-              <AlertCircle className="w-4 h-4 shrink-0 text-[#ff5f1f]" />
+              <AlertCircle className="w-4 h-4 shrink-0 text-[#EF4444]" />
             )}
             <span>{submitFeedback.message}</span>
           </div>
         )}
 
-        {/* Form */}
         <form onSubmit={handleSubmit} noValidate className="space-y-3.5">
-          {/* Full Name */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1" htmlFor="name-input">
-              Full Legal / Officer Name <span className="text-[#ff5f1f]">*</span>
+            <label className="block text-xs font-semibold text-slate-300 mb-1" htmlFor="signup-name">
+              Officer Full Name <span className="text-[#EF4444]">*</span>
             </label>
             <div className="relative">
-              <User className="w-4 h-4 text-teal-400/80 absolute left-3 top-1/2 -translate-y-1/2" />
+              <User className="w-4 h-4 text-[#64748B] absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
-                id="name-input"
+                id="signup-name"
                 type="text"
                 value={formData.name}
                 onChange={(e) => {
                   setFormData({ ...formData, name: e.target.value });
                   if (errors.name) setErrors({ ...errors, name: null });
                 }}
-                placeholder="Harshdeep Singh"
-                className={`w-full bg-[#060D17] border rounded-xl pl-9 pr-3.5 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 transition-all ${
-                  errors.name
-                    ? "border-[#ff5f1f] focus:border-[#ff5f1f]"
-                    : "border-teal-900/50 focus:border-teal-400 focus:ring-teal-400/30"
+                placeholder="Major R. Sharma"
+                className={`w-full bg-[#111827] border rounded-lg pl-8 pr-3 py-2 text-xs text-white placeholder-[#64748B] focus:outline-none transition-colors ${
+                  errors.name ? "border-[#EF4444]" : "border-[#1E293B] focus:border-[#38BDF8]"
                 }`}
-                aria-invalid={Boolean(errors.name)}
               />
             </div>
-            {errors.name && <p className="text-[10px] text-[#ff5f1f] mt-1 font-semibold">{errors.name}</p>}
+            {errors.name && (
+              <p className="text-[11px] text-[#EF4444] mt-1 flex items-center gap-1 font-medium">
+                <AlertCircle className="w-3 h-3" />
+                {errors.name}
+              </p>
+            )}
           </div>
 
-          {/* Email */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1" htmlFor="signup-email-input">
-              Agency / Organization Email <span className="text-[#ff5f1f]">*</span>
+            <label className="block text-xs font-semibold text-slate-300 mb-1" htmlFor="signup-email">
+              Official Agency Email <span className="text-[#EF4444]">*</span>
             </label>
             <div className="relative">
-              <Mail className="w-4 h-4 text-teal-400/80 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Mail className="w-4 h-4 text-[#64748B] absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
-                id="signup-email-input"
+                id="signup-email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => {
@@ -216,150 +201,134 @@ export function SignUpPage({ onNavigateToSignIn, onSignUpSuccess }) {
                   if (errors.email) setErrors({ ...errors, email: null });
                 }}
                 placeholder="officer@ndma.gov.in"
-                className={`w-full bg-[#060D17] border rounded-xl pl-9 pr-3.5 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 transition-all ${
-                  errors.email
-                    ? "border-[#ff5f1f] focus:border-[#ff5f1f]"
-                    : "border-teal-900/50 focus:border-teal-400 focus:ring-teal-400/30"
+                className={`w-full bg-[#111827] border rounded-lg pl-8 pr-3 py-2 text-xs text-white placeholder-[#64748B] focus:outline-none transition-colors ${
+                  errors.email ? "border-[#EF4444]" : "border-[#1E293B] focus:border-[#38BDF8]"
                 }`}
-                aria-invalid={Boolean(errors.email)}
               />
             </div>
-            {errors.email && <p className="text-[10px] text-[#ff5f1f] mt-1 font-semibold">{errors.email}</p>}
+            {errors.email && (
+              <p className="text-[11px] text-[#EF4444] mt-1 flex items-center gap-1 font-medium">
+                <AlertCircle className="w-3 h-3" />
+                {errors.email}
+              </p>
+            )}
           </div>
 
-          {/* Role Selection */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
-              Operational Station Role <span className="text-[#ff5f1f]">*</span>
+            <label className="block text-xs font-semibold text-slate-300 mb-1" htmlFor="signup-role">
+              Designated Operations Role <span className="text-[#EF4444]">*</span>
             </label>
-            <div className="grid grid-cols-3 gap-2">
-              {["Analyst", "Responder", "Admin"].map((r) => {
-                const isSelected = formData.role === r;
-                return (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, role: r })}
-                    className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                      isSelected
-                        ? "bg-teal-500/20 border-teal-400 text-teal-300 shadow-sm"
-                        : "bg-[#060D17] border-teal-900/40 text-slate-400 hover:text-slate-200"
-                    }`}
-                  >
-                    <Briefcase className="w-3.5 h-3.5" />
-                    <span>{r}</span>
-                  </button>
-                );
-              })}
+            <div className="relative">
+              <Briefcase className="w-4 h-4 text-[#64748B] absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <select
+                id="signup-role"
+                value={formData.role}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                className="w-full bg-[#111827] border border-[#1E293B] rounded-lg pl-8 pr-3 py-2 text-xs text-white focus:outline-none focus:border-[#38BDF8] transition-colors"
+              >
+                <option value="Analyst">Emergency Data Analyst</option>
+                <option value="Operator">Operations Commander</option>
+                <option value="Forensic Reviewer">Forensic Media Reviewer</option>
+                <option value="GIS Specialist">GIS Cartography Specialist</option>
+              </select>
             </div>
           </div>
 
-          {/* Password & Confirm Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Password */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1" htmlFor="signup-password-input">
-                Password <span className="text-[#ff5f1f]">*</span>
+              <label className="block text-xs font-semibold text-slate-300 mb-1" htmlFor="signup-password">
+                Password <span className="text-[#EF4444]">*</span>
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-teal-400/80 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Lock className="w-4 h-4 text-[#64748B] absolute left-2.5 top-1/2 -translate-y-1/2" />
                 <input
-                  id="signup-password-input"
+                  id="signup-password"
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={(e) => {
                     setFormData({ ...formData, password: e.target.value });
                     if (errors.password) setErrors({ ...errors, password: null });
                   }}
-                  placeholder="Min 8 chars, 1 num"
-                  className={`w-full bg-[#060D17] border rounded-xl pl-9 pr-9 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 transition-all ${
-                    errors.password
-                      ? "border-[#ff5f1f] focus:border-[#ff5f1f]"
-                      : "border-teal-900/50 focus:border-teal-400 focus:ring-teal-400/30"
+                  placeholder="Min. 8 characters"
+                  className={`w-full bg-[#111827] border rounded-lg pl-8 pr-9 py-2 text-xs text-white placeholder-[#64748B] focus:outline-none transition-colors ${
+                    errors.password ? "border-[#EF4444]" : "border-[#1E293B] focus:border-[#38BDF8]"
                   }`}
-                  aria-invalid={Boolean(errors.password)}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-teal-300 cursor-pointer"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-white transition-colors cursor-pointer"
                   tabIndex={-1}
                 >
-                  {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5 text-slate-400" />}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
               {errors.password && (
-                <p className="text-[10px] text-[#ff5f1f] mt-1 font-semibold">{errors.password}</p>
+                <p className="text-[11px] text-[#EF4444] mt-1 font-medium">{errors.password}</p>
               )}
             </div>
 
-            {/* Confirm Password */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1" htmlFor="confirm-password-input">
-                Confirm Password <span className="text-[#ff5f1f]">*</span>
+              <label className="block text-xs font-semibold text-slate-300 mb-1" htmlFor="signup-confirm-password">
+                Confirm Password <span className="text-[#EF4444]">*</span>
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-teal-400/80 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Lock className="w-4 h-4 text-[#64748B] absolute left-2.5 top-1/2 -translate-y-1/2" />
                 <input
-                  id="confirm-password-input"
+                  id="signup-confirm-password"
                   type={showConfirmPassword ? "text" : "password"}
                   value={formData.confirmPassword}
                   onChange={(e) => {
                     setFormData({ ...formData, confirmPassword: e.target.value });
                     if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: null });
                   }}
-                  placeholder="Repeat password"
-                  className={`w-full bg-[#060D17] border rounded-xl pl-9 pr-9 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 transition-all ${
-                    errors.confirmPassword
-                      ? "border-[#ff5f1f] focus:border-[#ff5f1f]"
-                      : "border-teal-900/50 focus:border-teal-400 focus:ring-teal-400/30"
+                  placeholder="Re-enter password"
+                  className={`w-full bg-[#111827] border rounded-lg pl-8 pr-9 py-2 text-xs text-white placeholder-[#64748B] focus:outline-none transition-colors ${
+                    errors.confirmPassword ? "border-[#EF4444]" : "border-[#1E293B] focus:border-[#38BDF8]"
                   }`}
-                  aria-invalid={Boolean(errors.confirmPassword)}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-teal-300 cursor-pointer"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-white transition-colors cursor-pointer"
                   tabIndex={-1}
                 >
-                  {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5 text-slate-400" />}
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="text-[10px] text-[#ff5f1f] mt-1 font-semibold">{errors.confirmPassword}</p>
+                <p className="text-[11px] text-[#EF4444] mt-1 font-medium">{errors.confirmPassword}</p>
               )}
             </div>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full mt-3 py-3 px-4 rounded-xl bg-gradient-to-r from-teal-500 via-teal-400 to-amber-400 hover:from-teal-400 hover:to-amber-300 disabled:opacity-50 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-teal-950/40 transition-all cursor-pointer active:scale-95"
+            className="w-full mt-2 py-2.5 px-3 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-md"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
-                <span>Registering Operator Profile...</span>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Provisioning Account...</span>
               </>
             ) : (
               <>
-                <span>Complete Registration & Enter Console</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>Complete Registration</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </>
             )}
           </button>
         </form>
 
-        {/* Footer / Switch to Sign In */}
-        <div className="mt-5 pt-3.5 border-t border-teal-900/30 text-center text-xs text-slate-400">
-          <span>Already registered with DisasterWatch? </span>
+        <div className="mt-5 pt-3 border-t border-[#1E293B] text-center text-xs text-[#94A3B8]">
+          <span>Already have authorized credentials? </span>
           <button
             type="button"
             onClick={onNavigateToSignIn}
-            className="text-amber-300 hover:text-amber-200 font-bold underline underline-offset-2 ml-1 cursor-pointer"
+            className="text-[#38BDF8] hover:underline font-semibold ml-1 cursor-pointer"
           >
-            Sign In to Existing Station
+            Sign In Here
           </button>
         </div>
       </div>
