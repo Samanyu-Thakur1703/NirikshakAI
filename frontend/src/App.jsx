@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { Sidebar } from "./components/layout/Sidebar";
 import { TopNav } from "./components/layout/TopNav";
 import { SimulatedBanner } from "./components/common/SimulatedBanner";
 import { IncidentDetailModal } from "./components/common/IncidentDetailModal";
+import { LiveIngestionModal } from "./components/common/LiveIngestionModal";
 import { OverviewPage } from "./pages/OverviewPage";
 import { LiveReportsPage } from "./pages/LiveReportsPage";
 import { IncidentMapPage } from "./pages/IncidentMapPage";
@@ -10,19 +12,27 @@ import { VerificationQueuePage } from "./pages/VerificationQueuePage";
 import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { AiAgentsPage } from "./pages/AiAgentsPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { SignInPage } from "./pages/SignInPage";
+import { SignUpPage } from "./pages/SignUpPage";
 import { useDisasterData } from "./hooks/useDisasterData";
-import { Radio, AlertCircle } from "lucide-react";
+import { Radio, AlertCircle, Zap } from "lucide-react";
 
-export default function App() {
+function DashboardContent() {
   const [activePage, setActivePage] = useState("overview");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isIngestModalOpen, setIsIngestModalOpen] = useState(false);
 
   const {
     reports,
     filteredReports,
     priorityAlerts,
+    rejectedReports,
     stats,
+    isBackendConnected,
+    backendError,
+    isRefreshing,
+    isIngesting,
     searchQuery,
     setSearchQuery,
     selectedType,
@@ -39,17 +49,20 @@ export default function App() {
     verifyReport,
     flagReport,
     mergeDuplicate,
-    addSimulatedIncomingReport,
+    triggerLiveIngestion,
+    refreshBackendData,
   } = useDisasterData();
 
   const pageTitles = {
     overview: "Disaster Intelligence Command Center",
     reports: "Live Incident Feed & Influx Stream",
     map: "GIS Operations & Spatial Clusters Map",
-    queue: "Verification & Deduplication Workbench",
+    queue: "Verification, Deduplication & Hoax Workbench",
     analytics: "Incident Intelligence & Latency Analytics",
     agents: "Autonomous Multi-Agent Pipeline Console",
     settings: "System Configuration & Protocols",
+    signin: "Operator Sign In",
+    signup: "Operator Registration",
   };
 
   const renderActivePage = () => {
@@ -64,6 +77,7 @@ export default function App() {
             selectedIncident={selectedIncident}
             onSelectIncident={setSelectedIncident}
             onNavigateTo={setActivePage}
+            onOpenIngestConsole={() => setIsIngestModalOpen(true)}
           />
         );
       case "reports":
@@ -96,22 +110,38 @@ export default function App() {
         return (
           <VerificationQueuePage
             reports={reports}
+            rejectedReports={rejectedReports}
+            onSelectIncident={setSelectedIncident}
             onVerify={verifyReport}
             onFlag={flagReport}
             onMerge={mergeDuplicate}
-            onSelectIncident={setSelectedIncident}
           />
         );
       case "analytics":
-        return (
-          <AnalyticsPage reports={reports} stats={stats} />
-        );
+        return <AnalyticsPage reports={reports} stats={stats} />;
       case "agents":
         return (
-          <AiAgentsPage onTriggerSimulation={addSimulatedIncomingReport} />
+          <AiAgentsPage
+            onTriggerAgent={(agentId) => {
+              if (agentId === "ingestion") {
+                setIsIngestModalOpen(true);
+              } else {
+                triggerLiveIngestion();
+              }
+            }}
+          />
         );
       case "settings":
-        return <SettingsPage />;
+        return (
+          <SettingsPage
+            isBackendConnected={isBackendConnected}
+            onRefresh={() => refreshBackendData(false)}
+          />
+        );
+      case "signin":
+        return <SignInPage onNavigate={setActivePage} />;
+      case "signup":
+        return <SignUpPage onNavigate={setActivePage} />;
       default:
         return (
           <OverviewPage
@@ -122,14 +152,15 @@ export default function App() {
             selectedIncident={selectedIncident}
             onSelectIncident={setSelectedIncident}
             onNavigateTo={setActivePage}
+            onOpenIngestConsole={() => setIsIngestModalOpen(true)}
           />
         );
     }
   };
 
   return (
-    <div className="flex h-screen bg-[#070B13] text-slate-100 font-sans overflow-hidden">
-      {/* Sidebar for Desktop */}
+    <div className="flex h-screen bg-[#060A0F] text-slate-100 overflow-hidden font-sans selection:bg-teal-500/30 selection:text-teal-200">
+      {/* Sidebar Navigation */}
       <Sidebar
         activePage={activePage}
         setActivePage={(page) => {
@@ -141,29 +172,8 @@ export default function App() {
         pendingCount={stats.pending}
       />
 
-      {/* Mobile Drawer Overlay */}
-      {isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        >
-          <div className="w-64 h-full" onClick={(e) => e.stopPropagation()}>
-            <Sidebar
-              activePage={activePage}
-              setActivePage={(page) => {
-                setActivePage(page);
-                setIsMobileMenuOpen(false);
-              }}
-              isCollapsed={false}
-              setIsCollapsed={() => setIsMobileMenuOpen(false)}
-              pendingCount={stats.pending}
-            />
-          </div>
-        </div>
-      )}
-
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#060A0F]">
         {/* Top Navigation */}
         <TopNav
           activePage={activePage}
@@ -171,32 +181,50 @@ export default function App() {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           criticalCount={stats.critical}
+          isBackendConnected={isBackendConnected}
           onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
+          onNavigateToAuth={(view) => setActivePage(view)}
+          onOpenIngestConsole={() => setIsIngestModalOpen(true)}
         />
 
-        {/* Clear Simulation & Influx Controls Banner */}
+        {/* Clear Backend Connection & Simulation Status Banner */}
         <SimulatedBanner
+          isBackendConnected={isBackendConnected}
+          backendError={backendError}
+          isRefreshing={isRefreshing}
+          isIngesting={isIngesting}
+          onRefresh={() => refreshBackendData(false)}
           isSimulatingLive={isSimulatingLive}
           onToggleSimulation={() => setIsSimulatingLive(!isSimulatingLive)}
-          onInjectReport={addSimulatedIncomingReport}
+          onTriggerIngest={triggerLiveIngestion}
+          onOpenIngestConsole={() => setIsIngestModalOpen(true)}
         />
 
         {/* Scrollable Page Body */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#070B13]">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#060A0F]">
           {renderActivePage()}
         </main>
       </div>
 
       {/* Floating Influx Alert Notification */}
       {liveStreamAlert && (
-        <div className="fixed bottom-5 right-5 z-50 bg-cyan-950/90 border border-cyan-500/50 text-cyan-200 px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md flex items-center gap-3 animate-bounce">
-          <Radio className="w-4 h-4 text-cyan-400 shrink-0" />
+        <div className="fixed bottom-5 right-5 z-50 bg-[#071520]/95 border border-teal-400/60 text-teal-200 px-4 py-3 rounded-2xl shadow-2xl backdrop-blur-md flex items-center gap-3 animate-fade-in">
+          <Zap className="w-4 h-4 text-amber-300 fill-amber-300 shrink-0" />
           <div className="text-xs">
-            <span className="font-bold text-white block">Incoming Signal Intercepted:</span>
+            <span className="font-bold text-white block">Real-World Influx:</span>
             <span>{liveStreamAlert}</span>
           </div>
         </div>
       )}
+
+      {/* Real-World Ingestion Console Modal */}
+      <LiveIngestionModal
+        isOpen={isIngestModalOpen}
+        onClose={() => setIsIngestModalOpen(false)}
+        onTriggerIngestion={triggerLiveIngestion}
+        isIngesting={isIngesting}
+        backendConnected={isBackendConnected}
+      />
 
       {/* Incident Detail Modal / Forensic Dossier */}
       {selectedIncident && (
@@ -209,5 +237,13 @@ export default function App() {
         />
       )}
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <DashboardContent />
+    </AuthProvider>
   );
 }
