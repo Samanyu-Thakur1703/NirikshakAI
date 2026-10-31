@@ -99,12 +99,16 @@ async def _fetch_rainfall(lat: float, lon: float) -> dict:
 # Public API
 # ---------------------------------------------------------------------------
 
-def evaluate_evidence(report: DisasterReport) -> Checks:
+async def evaluate_evidence(report: DisasterReport) -> Checks:
     """
     Run C1 (official) and C2 (physical) checks for a single report.
 
     Returns a `Checks` object with only `official` and `physical` populated;
     all other check fields remain at their defaults.
+
+    Async: callers must ``await`` it (or ``asyncio.run()`` it from a sync
+    context).  This avoids ``asyncio.run() cannot be called from a running
+    event loop`` when invoked from an async FastAPI endpoint.
     """
     official = OfficialCheck()
     physical = PhysicalCheck()
@@ -116,9 +120,7 @@ def evaluate_evidence(report: DisasterReport) -> Checks:
             # GeoLocation has no `state` field; pass the district as the
             # SACHET state filter (offline fallback returns all alerts if
             # the substring does not match, so this is safe).
-            sachet_alerts, imd_alerts = asyncio.run(
-                _fetch_official(district, district)
-            )
+            sachet_alerts, imd_alerts = await _fetch_official(district, district)
             fetch_error = None
         except Exception as exc:  # noqa: BLE001 - never raise from evidence agent
             sachet_alerts, imd_alerts = [], []
@@ -160,7 +162,7 @@ def evaluate_evidence(report: DisasterReport) -> Checks:
         date_str = claimed_dt.strftime("%Y-%m-%d")
 
         try:
-            rainfall = asyncio.run(_fetch_rainfall(lat, lon))
+            rainfall = await _fetch_rainfall(lat, lon)
             rainfall_mm = float(rainfall.get("rainfall_mm", 0.0))
             physical.rainfall_mm = rainfall_mm
             if rainfall_mm > 10.0:

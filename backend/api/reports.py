@@ -88,6 +88,14 @@ def ingest_single_report(payload: Dict[str, Any], db: Session = Depends(get_db))
 
     # Normalize into standard DisasterReport schema
     report = normalize_report(payload, source_platform=platform)
+
+    # M3 pipeline: Evidence → Judge
+    import asyncio as _asyncio
+    from backend.verification.evidence_agent import evaluate_evidence
+    from backend.verification.judge_agent import apply_judgment
+
+    report.checks = _asyncio.run(evaluate_evidence(report))
+    report = apply_judgment(report)
     db_record, is_new = upsert_report(db, report)
 
     return {
@@ -201,6 +209,13 @@ async def trigger_live_ingestion(
             continue
 
         normalized = normalize_report(item, source_platform=source_platform)
+
+        # M3 pipeline: Evidence → Judge
+        from backend.verification.evidence_agent import evaluate_evidence
+        from backend.verification.judge_agent import apply_judgment
+
+        normalized.checks = await evaluate_evidence(normalized)
+        normalized = apply_judgment(normalized)
         upsert_report(db, normalized)
         ingested_reports.append(normalized.report_id)
 
