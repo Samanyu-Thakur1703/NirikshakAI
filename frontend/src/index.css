@@ -2,72 +2,81 @@
 @import "maplibre-gl/dist/maplibre-gl.css";
 
 :root {
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  color-scheme: dark;
+  font-family: 'Inter', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color-scheme: light;
 
-  /* Design Tokens: Teal, Champagne Gold, Electric Orange */
-  --teal-400: #2dd4bf;
-  --teal-500: #14b8a6;
-  --teal-600: #0d9488;
-  --teal-950: #042f2e;
-
-  --gold-300: #fde68a;
-  --gold-400: #f59e0b;
-  --gold-500: #d4af37;
-  --gold-600: #b8860b;
-  --gold-950: #451a03;
-
-  --orange-electric: #ff5f1f;
-  --orange-glow: #ff7a00;
-  --orange-accent: #fb923c;
-  --orange-950: #431407;
-
-  --bg-obsidian: #060a0f;
-  --bg-panel: #0b111a;
-  --bg-card: #101924;
+  /* Enterprise Emergency Intelligence Design System Tokens */
+  --color-primary: #183D35;
+  --color-primary-hover: #122E28;
+  --color-secondary: #397568;
+  --color-secondary-light: #EBF2F0;
+  
+  --color-bg: #F3F4F0;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: #F8F9F7;
+  
+  --color-text-primary: #252C2A;
+  --color-text-secondary: #737D78;
+  --color-text-muted: #9AA39E;
+  
+  --color-warning: #D98236;
+  --color-warning-subtle: #FBF2E9;
+  --color-warning-border: #F3D7BD;
+  
+  --color-critical: #C94C4C;
+  --color-critical-subtle: #FBF0F0;
+  --color-critical-border: #F4CECE;
+  
+  --color-border: #E1E5E0;
+  --color-border-dark: #CDD3CB;
 }
 
 body {
-  background-color: var(--bg-obsidian);
-  color: #f1f5f9;
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  margin: 0;
+  padding: 0;
   overflow-x: hidden;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  -webkit-font-smoothing: antialiased;
 }
 
 code, kbd, samp, pre, .font-mono {
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-/* Custom dark scrollbar with subtle teal thumb */
+/* Crisp Enterprise Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #060a0f;
+  background: #F3F4F0;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #132738;
-  border-radius: 3px;
+  background: #CDD3CB;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #0d9488;
+  background: #9AA39E;
 }
 
-/* MapLibre custom control styles in Teal & Slate */
+/* MapLibre Professional GIS Controls */
 .maplibregl-ctrl-group {
-  background: rgba(11, 17, 26, 0.88) !important;
-  border: 1px solid rgba(20, 184, 166, 0.3) !important;
-  backdrop-filter: blur(10px);
-  border-radius: 10px !important;
+  background: #FFFFFF !important;
+  border: 1px solid #E1E5E0 !important;
+  border-radius: 6px !important;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
 }
 
 .maplibregl-ctrl-group button {
-  border-bottom: 1px solid rgba(20, 184, 166, 0.15) !important;
+  border-bottom: 1px solid #E1E5E0 !important;
+  width: 30px !important;
+  height: 30px !important;
 }
 
 .maplibregl-ctrl-group button:last-child {
@@ -75,124 +84,66 @@ code, kbd, samp, pre, .font-mono {
 }
 
 .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
-  filter: invert(0.9) brightness(1.2);
+  filter: none;
+  opacity: 0.75;
+}
+
+.maplibregl-ctrl-group button:hover .maplibregl-ctrl-icon {
+  opacity: 1;
 }
 
 .maplibregl-ctrl-attrib {
-  background-color: rgba(6, 10, 15, 0.8) !important;
-  color: #64748b !important;
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  color: #737D78 !important;
   font-size: 10px !important;
   border-radius: 4px;
   padding: 2px 6px !important;
-  border: 1px solid rgba(20, 184, 166, 0.15);
+  border: 1px solid #E1E5E0;
 }
 
 .maplibregl-ctrl-attrib a {
-  color: #2dd4bf !important;
+  color: #397568 !important;
 }
 
+/* Clean Investigation Popup */
 .maplibregl-popup-content {
-  background: rgba(11, 17, 26, 0.96) !important;
-  color: #f1f5f9 !important;
-  border: 1px solid rgba(20, 184, 166, 0.4) !important;
-  border-radius: 10px !important;
-  box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.7), 0 0 15px rgba(20, 184, 166, 0.15) !important;
+  background: #FFFFFF !important;
+  color: #252C2A !important;
+  border: 1px solid #CDD3CB !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1) !important;
   padding: 0 !important;
 }
 
 .maplibregl-popup-anchor-top .maplibregl-popup-tip {
-  border-bottom-color: rgba(11, 17, 26, 0.96) !important;
+  border-bottom-color: #FFFFFF !important;
 }
 .maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
-  border-top-color: rgba(11, 17, 26, 0.96) !important;
+  border-top-color: #FFFFFF !important;
 }
 .maplibregl-popup-anchor-left .maplibregl-popup-tip {
-  border-right-color: rgba(11, 17, 26, 0.96) !important;
+  border-right-color: #FFFFFF !important;
 }
 .maplibregl-popup-anchor-right .maplibregl-popup-tip {
-  border-left-color: rgba(11, 17, 26, 0.96) !important;
+  border-left-color: #FFFFFF !important;
 }
 
 .maplibregl-popup-close-button {
-  color: #94a3b8 !important;
-  font-size: 16px !important;
-  padding: 6px 10px !important;
+  color: #737D78 !important;
+  font-size: 15px !important;
+  padding: 4px 8px !important;
 }
 
 .maplibregl-popup-close-button:hover {
-  color: #2dd4bf !important;
+  color: #252C2A !important;
   background: transparent !important;
 }
 
-/* Electric Orange Keyframe Pulse */
-@keyframes electric-orange-pulse {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(255, 95, 31, 0.8);
-  }
-  70% {
-    transform: scale(1.05);
-    box-shadow: 0 0 0 14px rgba(255, 95, 31, 0);
-  }
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(255, 95, 31, 0);
-  }
+/* Operational UI Utility Helpers */
+.panel-border {
+  border: 1px solid var(--color-border);
 }
 
-/* Cyber Teal Keyframe Pulse */
-@keyframes cyber-teal-pulse {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.7);
-  }
-  70% {
-    transform: scale(1.03);
-    box-shadow: 0 0 0 12px rgba(45, 212, 191, 0);
-  }
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(45, 212, 191, 0);
-  }
-}
-
-/* Champagne Gold Glow */
-@keyframes champagne-glow {
-  0%, 100% {
-    box-shadow: 0 0 10px rgba(212, 175, 55, 0.25);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
-  }
-}
-
-.electric-ping {
-  animation: electric-orange-pulse 1.8s infinite;
-}
-
-.teal-ping {
-  animation: cyber-teal-pulse 2.2s infinite;
-}
-
-.gold-glow {
-  animation: champagne-glow 3s infinite ease-in-out;
-}
-
-/* Smooth command center panel styling */
-.glass-panel {
-  background: rgba(11, 17, 26, 0.88);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(20, 184, 166, 0.2);
-}
-
-.glass-panel-gold {
-  background: rgba(16, 21, 28, 0.88);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(212, 175, 55, 0.25);
-}
-
-.glass-panel-orange {
-  background: rgba(20, 16, 20, 0.88);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 95, 31, 0.3);
+.subtle-row:hover {
+  background-color: var(--color-surface-subtle);
 }

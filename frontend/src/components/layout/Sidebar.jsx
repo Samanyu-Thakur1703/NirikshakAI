@@ -9,9 +9,8 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  ShieldAlert,
-  Flame,
-  Zap,
+  Shield,
+  Layers,
   UserCheck,
 } from "lucide-react";
 
@@ -22,43 +21,45 @@ export function Sidebar({
   setIsCollapsed,
   pendingCount = 0,
 }) {
-  const navItems = [
-    { id: "overview", label: "Overview", icon: LayoutDashboard },
-    { id: "reports", label: "Live Reports", icon: Radio, badge: "Live" },
-    { id: "map", label: "Incident Map", icon: Map },
+  const mainNavItems = [
+    { id: "overview", label: "Operations Overview", icon: LayoutDashboard },
+    { id: "reports", label: "Live Telemetry Feed", icon: Radio, badge: "Live" },
+    { id: "map", label: "GIS Geospatial Map", icon: Map },
     {
       id: "queue",
-      label: "Verification Queue",
+      label: "Verification Workbench",
       icon: ShieldCheck,
       count: pendingCount,
-      countColor: "bg-amber-400/20 text-amber-300 border border-amber-400/40 font-semibold",
     },
-    { id: "analytics", label: "Analytics", icon: BarChart3 },
-    { id: "agents", label: "AI Agents", icon: Bot, badge: "4 Active" },
-    { id: "settings", label: "Settings", icon: Settings },
-    { id: "signin", label: "Operator Station", icon: UserCheck, badge: "Auth" },
+    { id: "analytics", label: "Incident Analytics", icon: BarChart3 },
+    { id: "agents", label: "AI Pipeline Engine", icon: Bot, badge: "4 Active" },
+  ];
+
+  const adminNavItems = [
+    { id: "settings", label: "System Protocols", icon: Settings },
+    { id: "signin", label: "Operator Station", icon: UserCheck },
   ];
 
   return (
     <aside
-      className={`relative flex flex-col bg-[#060A0F] border-r border-teal-900/30 transition-all duration-300 z-30 shrink-0 ${
-        isCollapsed ? "w-18" : "w-64"
+      className={`relative flex flex-col bg-[#183D35] text-white transition-all duration-200 z-30 shrink-0 select-none border-r border-[#122E28] ${
+        isCollapsed ? "w-16" : "w-60"
       }`}
     >
       {/* Brand Header */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-teal-900/30 bg-[#080D14]">
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 via-teal-600 to-amber-500 flex items-center justify-center shadow-lg shadow-teal-900/40 shrink-0 border border-teal-300/40">
-            <ShieldAlert className="w-5 h-5 text-slate-950" />
+      <div className="h-14 flex items-center justify-between px-3.5 border-b border-[#214D43]">
+        <div className="flex items-center gap-2.5 overflow-hidden">
+          <div className="w-8 h-8 rounded bg-[#214D43] border border-[#2D6659] flex items-center justify-center shrink-0">
+            <Shield className="w-4 h-4 text-white" />
           </div>
 
           {!isCollapsed && (
             <div className="min-w-0">
-              <h1 className="text-sm font-bold tracking-tight text-white flex items-center gap-1.5 truncate">
-                DisasterWatch <span className="text-teal-400 font-mono text-xs">AI</span>
+              <h1 className="text-xs font-bold tracking-tight text-white uppercase flex items-center gap-1 truncate">
+                DisasterWatch <span className="text-[#A2B7B1] font-mono text-[10px]">AI</span>
               </h1>
-              <p className="text-[10px] text-amber-300/80 font-medium tracking-wide truncate">
-                Command Intelligence
+              <p className="text-[10px] text-[#A2B7B1] tracking-wider truncate uppercase">
+                Geospatial EOC
               </p>
             </div>
           )}
@@ -66,76 +67,124 @@ export function Sidebar({
 
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors hidden md:block cursor-pointer"
+          className="p-1 rounded text-[#A2B7B1] hover:text-white hover:bg-[#214D43] transition-colors hidden md:block cursor-pointer"
           title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
         >
-          {isCollapsed ? <ChevronRight className="w-4 h-4 text-teal-400" /> : <ChevronLeft className="w-4 h-4" />}
+          {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
       </div>
 
-      {/* Navigation Links */}
-      <nav className="flex-1 py-4 px-2 space-y-1.5 overflow-y-auto">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activePage === item.id;
-
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActivePage(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all group cursor-pointer ${
-                isActive
-                  ? "bg-teal-500/15 text-teal-300 border-l-2 border-teal-400 border-y border-r border-teal-500/30 shadow-md shadow-teal-950/60"
-                  : "text-slate-400 hover:text-slate-100 hover:bg-slate-900/70"
-              }`}
-              title={isCollapsed ? item.label : undefined}
-            >
-              <Icon
-                className={`w-4 h-4 shrink-0 transition-colors ${
-                  isActive ? "text-teal-300" : "text-slate-400 group-hover:text-teal-400"
-                }`}
-              />
-
-              {!isCollapsed && (
-                <>
-                  <span className="truncate flex-1 text-left">{item.label}</span>
-
-                  {item.count > 0 && (
-                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${item.countColor}`}>
-                      {item.count}
-                    </span>
-                  )}
-
-                  {item.badge && (
-                    <span className="text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-teal-950/60 text-teal-300 border border-teal-800/60">
-                      {item.badge}
-                    </span>
-                  )}
-                </>
-              )}
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* System Status Pill at bottom */}
-      <div className="p-3 border-t border-teal-900/30 bg-[#070D14]">
-        {!isCollapsed ? (
-          <div className="bg-[#0B121C] rounded-xl p-2.5 border border-teal-900/40 text-[11px] shadow-sm">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-slate-300 font-semibold flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
-                Pipeline Active
-              </span>
-              <span className="text-[10px] font-mono font-bold text-amber-300">4/4 Online</span>
+      {/* Navigation Modules */}
+      <div className="flex-1 py-3 px-2 space-y-4 overflow-y-auto">
+        {/* Section 1: Operations */}
+        <div>
+          {!isCollapsed && (
+            <div className="px-2 pb-1.5 text-[9px] font-bold text-[#A2B7B1] uppercase tracking-wider">
+              Operations
             </div>
-            <div className="text-[10px] text-slate-400 truncate">
-              IMD Mausam • NASA GIBS • GDELT
+          )}
+          <nav className="space-y-0.5">
+            {mainNavItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activePage === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActivePage(item.id)}
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-colors group cursor-pointer ${
+                    isActive
+                      ? "bg-[#214D43] text-white shadow-xs"
+                      : "text-[#D2DDD9] hover:text-white hover:bg-[#1E483F]"
+                  }`}
+                  title={isCollapsed ? item.label : undefined}
+                >
+                  <Icon
+                    className={`w-4 h-4 shrink-0 transition-colors ${
+                      isActive ? "text-white" : "text-[#A2B7B1] group-hover:text-white"
+                    }`}
+                  />
+
+                  {!isCollapsed && (
+                    <>
+                      <span className="truncate flex-1 text-left">{item.label}</span>
+
+                      {item.count > 0 && (
+                        <span className="text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded bg-[#D98236] text-white">
+                          {item.count}
+                        </span>
+                      )}
+
+                      {item.badge && (
+                        <span className="text-[9px] uppercase font-mono px-1.5 py-0.2 rounded bg-[#214D43] text-[#A2B7B1] border border-[#2D6659]">
+                          {item.badge}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Section 2: Administration */}
+        <div>
+          {!isCollapsed && (
+            <div className="px-2 pb-1.5 text-[9px] font-bold text-[#A2B7B1] uppercase tracking-wider">
+              Administration
+            </div>
+          )}
+          <nav className="space-y-0.5">
+            {adminNavItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activePage === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActivePage(item.id)}
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded text-xs font-medium transition-colors group cursor-pointer ${
+                    isActive
+                      ? "bg-[#214D43] text-white"
+                      : "text-[#D2DDD9] hover:text-white hover:bg-[#1E483F]"
+                  }`}
+                  title={isCollapsed ? item.label : undefined}
+                >
+                  <Icon
+                    className={`w-4 h-4 shrink-0 transition-colors ${
+                      isActive ? "text-white" : "text-[#A2B7B1] group-hover:text-white"
+                    }`}
+                  />
+
+                  {!isCollapsed && (
+                    <span className="truncate flex-1 text-left">{item.label}</span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+
+      {/* Operational Station Status Footer */}
+      <div className="p-2.5 border-t border-[#214D43] bg-[#14332C]">
+        {!isCollapsed ? (
+          <div className="text-[11px] space-y-1">
+            <div className="flex items-center justify-between text-[#A2B7B1]">
+              <span className="flex items-center gap-1.5 font-medium text-white text-[10px]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#52B788]" />
+                TELEMETRY ACTIVE
+              </span>
+              <span className="font-mono text-[10px] text-[#A2B7B1]">v2.4-EOC</span>
+            </div>
+            <div className="text-[10px] text-[#A2B7B1] font-mono truncate">
+              SACHET • IMD • GIBS
             </div>
           </div>
         ) : (
-          <div className="flex justify-center" title="4 Agents Online">
-            <span className="w-2.5 h-2.5 rounded-full bg-teal-400 animate-pulse" />
+          <div className="flex justify-center" title="Telemetry Active">
+            <span className="w-2 h-2 rounded-full bg-[#52B788]" />
           </div>
         )}
       </div>
