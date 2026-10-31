@@ -1,0 +1,144 @@
+"""
+FastAPI Endpoints for Clustered Incidents & Dedup Operations.
+GroundTruth Architecture: Agent 2 of 7 (Dedup Agent).
+"""
+
+from typing import List, Optional, Dict, Any
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
+
+from backend.database import get_db
+from backend.models import Incident, DedupResponse, DedupStats, DisasterReport
+from backend.crud import (
+    list_incidents, get_incident_by_id, upsert_incident, list_reports, get_report_by_id
+)
+from agents.dedup_agent import get_dedup_agent
+
+router = APIRouter(tags=["Incidents & Dedup"])
+
+
+@router.post("/dedup", response_model=DedupResponse, status_code=status.HTTP_200_OK)
+def trigger_deduplication(
+    eps_km: float = Query(5.0, ge=0.5, le=50.0, description="DBSCAN spatial radius in km"),
+    time_window_min: int = Query(45, ge=5, le=1440, description="DBSCAN time window in minutes"),
+    limit: int = Query(250, ge=1, le=1000, description="Maximum reports to process from DB"),
+    db: Session = Depends(get_db)
+):
+    """
+    Run 3-tier duplicate detection and DBSCAN clustering on current database reports.
+    Merges duplicates and clusters nearby reports into Incident objects.
+    Persists resulting incidents into database for map visualization.
+    """
+    reports = list_reports(db=db, limit=limit)
+    if not reports:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No reports found in database to deduplicate. Run /reports/trigger first."
+        )
+
+    agent = get_dedup_agent()
+    result = agent.run(reports=reports, eps_km=eps_km, time_window_min=time_window_min)
+
+    # Persist generated incidents to SQLite database
+    for inc in result.incidents:
+        upsert_incident(db, inc)
+
+    return result
+
+
+@router.get("/incidents/clusters", response_model=List[Incident])
+def get_clustered_incidents(
+    limit: int = Query(50, ge=1, le=200),
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieve only clustered incidents (composed of 2 or more reports).
+    """
+    all_incidents = list_incidents(db=db, limit=limit)
+    return [inc for inc in all_incidents if inc.is_clustered or inc.cluster_size > 1]
+
+
+@router.get("/incidents", response_model=List[Incident])
+def get_all_incidents(
+    status: Optional[str] = Query(None, description="active | contained | archived"),
+    priority: Optional[str] = Query(None, description="LOW | MEDIUM | HIGH | CRITICAL"),
+    district: Optional[str] = Query(None, description="Filter by district name substring"),
+    limit: int = Query(50, ge=1, le=200),
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieve clustered disaster incidents for GIS mapping and operational response.
+    """
+    status_filter = status if isinstance(status, str) else None
+    priority_filter = priority if isinstance(priority, str) else None
+    district_filter = district if isinstance(district, str) else None
+
+    incidents = list_incidents(db=db, status=status_filter, limit=limit)
+    if priority_filter:
+        incidents = [inc for inc in incidents if inc.priority == priority_filter.upper()]
+    if district_filter:
+        incidents = [inc for inc in incidents if district_filter.lower() in inc.district.lower()]
+    return incidents
+
+
+# Alias for backward compatibility
+get_incidents = get_all_incidents
+
+
+@router.get("/incidents/{incident_id}", response_model=Incident)
+def get_single_incident(incident_id: str, db: Session = Depends(get_db)):
+    """
+    Retrieve details, draft CAP 1.2 alert, and member DisasterReport objects for an incident.
+    """
+    incident = get_incident_by_id(db, incident_id)
+    if not incident:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Incident '{incident_id}' not found"
+        )
+
+    # Populate member reports for evidence drawer inspection
+    member_reports = []
+    for r_id in incident.report_ids:
+        r = get_report_by_id(db, r_id)
+        if r:
+            member_reports.append(r)
+    incident.member_reports = member_reports
+
+    return incident
+
+
+@router.get("/stats/dedup", response_model=DedupStats)
+def get_dedup_stats(db: Session = Depends(get_db)):
+    """
+    Retrieve deduplication and clustering metrics.
+    """
+    incidents = list_incidents(db=db, limit=500)
+    clustered = sum(1 for i in incidents if i.is_clustered or i.cluster_size > 1)
+    single = sum(1 for i in incidents if not i.is_clustered and i.cluster_size <= 1)
+
+    agent = get_dedup_agent()
+    # Read hash databases size
+    exact_count = len(agent.detector.exact_db)
+    phash_count = len(agent.detector.phash_db)
+    semantic_count = len(agent.detector.semantic_db)
+
+    return DedupStats(
+        total_processed=len(incidents),
+        exact_duplicates=exact_count,
+        perceptual_duplicates=phash_count,
+        semantic_duplicates=semantic_count,
+        total_duplicates=exact_count + phash_count + semantic_count,
+        unique_incidents=len(incidents),
+        clustered_incidents=clustered,
+        single_report_incidents=single
+    )
+
+
+@router.post("/incidents", response_model=Incident, status_code=status.HTTP_201_CREATED)
+def create_or_update_incident(incident: Incident, db: Session = Depends(get_db)):
+    """
+    Directly save or update an incident cluster.
+    """
+    upsert_incident(db, incident)
+    return incident

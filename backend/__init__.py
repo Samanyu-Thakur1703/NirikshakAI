@@ -1,0 +1,3 @@
+"""
+NirikshakAI Backend Core Package.
+"""
