@@ -1,0 +1,9 @@
+{
+  "image_id": "ASONAM2017",
+  "event_name": "ecuador_eq_severe_im_1340.jpg",
+  "image_path": "data/ASONAM17_Damage_Image_Dataset/ecuador_eq/ecuador_eq_severe_im_1340.jpg",
+  "damage_severity": 2,
+  "informative": 0,
+  "humanitarian": 1,
+  "disaster_types": 0
+}
