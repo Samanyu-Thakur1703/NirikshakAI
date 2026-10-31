@@ -1,17 +1,7 @@
 import React, { useState } from "react";
 import {
   Bot,
-  Radio,
-  ShieldCheck,
-  MapPin,
-  TrendingUp,
-  Terminal,
-  Activity,
-  CheckCircle,
-  Play,
   Cpu,
-  Layers,
-  Sparkles,
   Zap,
 } from "lucide-react";
 import { AI_AGENTS, MOCK_AGENT_LOGS } from "../data/agentData";
@@ -47,16 +37,16 @@ export function AiAgentsPage({ onTriggerAgent, onTriggerSimulation }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Top Header */}
-      <div className="bg-[#0A111A]/95 border border-teal-900/30 rounded-2xl p-5 backdrop-blur-md shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-[#FFFFFF] border border-[#E1E5E0] rounded p-4 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <Bot className="w-5 h-5 text-teal-400" />
-            Autonomous AI Multi-Agent Mesh
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[#252C2A] flex items-center gap-2">
+            <Bot className="w-4 h-4 text-[#183D35]" />
+            Multi-Agent Pipeline Architecture
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Four specialized agents collaborating in a decentralized pipeline: Ingestion → Verification → Mapping → Ranking
+          <p className="text-xs text-[#737D78] mt-0.5">
+            Four specialized agents collaborating in a sequential pipeline: Ingestion → Verification → Mapping → Ranking
           </p>
         </div>
 
@@ -64,16 +54,16 @@ export function AiAgentsPage({ onTriggerAgent, onTriggerSimulation }) {
           <button
             onClick={() => onTriggerAgent ? onTriggerAgent("ingestion") : triggerSimulatedAction("Ingestion Agent")}
             disabled={isSimulatingBatch}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-teal-500 via-teal-400 to-amber-400 hover:from-teal-400 hover:to-amber-300 disabled:opacity-50 text-slate-950 text-xs font-bold shadow-lg shadow-teal-950/40 transition-all cursor-pointer active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#183D35] hover:bg-[#214D43] disabled:opacity-50 text-white text-xs font-medium transition-colors cursor-pointer"
           >
-            <Zap className="w-4 h-4 text-slate-950 fill-slate-950" />
+            <Zap className="w-3.5 h-3.5 text-amber-300" />
             {isSimulatingBatch ? "Running Ingestion..." : "Open Ingest Console"}
           </button>
         </div>
       </div>
 
       {/* 4 Core Agents Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         {AI_AGENTS.map((agent) => (
           <AgentStatusCard
             key={agent.id}
@@ -84,45 +74,45 @@ export function AiAgentsPage({ onTriggerAgent, onTriggerSimulation }) {
       </div>
 
       {/* Agent Workflow Contract Spec Box */}
-      <div className="bg-[#0A111A]/95 border border-teal-900/30 rounded-2xl p-5 backdrop-blur-md shadow-2xl">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-3.5 flex items-center gap-2">
-          <Cpu className="w-4 h-4 text-teal-400" />
+      <div className="bg-[#FFFFFF] border border-[#E1E5E0] rounded p-4 shadow-2xs">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-[#252C2A] mb-3 flex items-center gap-2">
+          <Cpu className="w-4 h-4 text-[#183D35]" />
           Autonomous Pipeline Architecture & Handshake Contracts (SPEC.md)
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
-          <div className="p-3.5 bg-[#060D17] rounded-xl border border-teal-900/40 space-y-1.5 shadow-sm">
-            <div className="font-bold text-teal-300 mb-1 flex items-center gap-1.5">
-              <span>1. Ingestion Agent</span>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+          <div className="p-3 bg-[#F8F9F7] rounded border border-[#E1E5E0] space-y-1">
+            <div className="font-bold text-[#183D35] mb-0.5">
+              1. Ingestion Agent
             </div>
-            <p className="text-slate-400 text-[11px] leading-relaxed">
+            <p className="text-[#737D78] text-[11px] leading-relaxed">
               Normalizes heterogeneous signals (SACHET, IMD, NASA GIBS, GDELT News, Bluesky) into strict DisasterReport format. Enforces relevance threshold &gt; 0.70.
             </p>
           </div>
 
-          <div className="p-3.5 bg-[#060D17] rounded-xl border border-teal-900/40 space-y-1.5 shadow-sm">
-            <div className="font-bold text-amber-300 mb-1 flex items-center gap-1.5">
-              <span>2. Verification Agent</span>
+          <div className="p-3 bg-[#F8F9F7] rounded border border-[#E1E5E0] space-y-1">
+            <div className="font-bold text-[#183D35] mb-0.5">
+              2. Verification Agent
             </div>
-            <p className="text-slate-400 text-[11px] leading-relaxed">
+            <p className="text-[#737D78] text-[11px] leading-relaxed">
               Performs 5-pillar checks: C1 Official alerts, C2 Physical weather radar, C3 Perceptual hash (pHash) against historical archives to catch recycled fakes, C4 Location, C5 Multi-source.
             </p>
           </div>
 
-          <div className="p-3.5 bg-[#060D17] rounded-xl border border-teal-900/40 space-y-1.5 shadow-sm">
-            <div className="font-bold text-teal-300 mb-1 flex items-center gap-1.5">
-              <span>3. Mapping Agent</span>
+          <div className="p-3 bg-[#F8F9F7] rounded border border-[#E1E5E0] space-y-1">
+            <div className="font-bold text-[#183D35] mb-0.5">
+              3. Mapping Agent
             </div>
-            <p className="text-slate-400 text-[11px] leading-relaxed">
+            <p className="text-[#737D78] text-[11px] leading-relaxed">
               Applies DBSCAN spatio-temporal clustering within 5km radius & 60min window. Calculates geographic polygon impact buffers and renders MapLibre GL layers.
             </p>
           </div>
 
-          <div className="p-3.5 bg-[#060D17] rounded-xl border border-teal-900/40 space-y-1.5 shadow-sm">
-            <div className="font-bold text-[#ff5f1f] mb-1 flex items-center gap-1.5">
-              <span>4. Ranking Agent</span>
+          <div className="p-3 bg-[#F8F9F7] rounded border border-[#E1E5E0] space-y-1">
+            <div className="font-bold text-[#C94C4C] mb-0.5">
+              4. Ranking Agent
             </div>
-            <p className="text-slate-400 text-[11px] leading-relaxed">
+            <p className="text-[#737D78] text-[11px] leading-relaxed">
               Calculates severity using weighted multi-criteria formula: 0.30 C1 + 0.25 C2 + 0.20 C5 + 0.15 C3 + 0.10 C4. Dispatches India NDMA SACHET compliant CAP 1.2 XML alerts.
             </p>
           </div>
@@ -130,24 +120,22 @@ export function AiAgentsPage({ onTriggerAgent, onTriggerSimulation }) {
       </div>
 
       {/* Live Agent Terminal Log Stream */}
-      <div>
-        <div className="flex items-center justify-between mb-2.5">
-          <div className="flex items-center gap-2 overflow-x-auto">
-            <span className="text-xs font-semibold text-slate-300">Filter Event Stream:</span>
-            {["all", "Ingestion", "Verification", "Mapping", "Ranking"].map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setSelectedAgentFilter(filter)}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-semibold transition-colors cursor-pointer ${
-                  selectedAgentFilter === filter
-                    ? "bg-teal-500/20 text-teal-300 border border-teal-500/40 shadow-sm"
-                    : "bg-[#0A111A] text-slate-400 hover:text-slate-200 border border-teal-900/30"
-                }`}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
+          <span className="text-xs font-semibold text-[#737D78]">Filter Event Stream:</span>
+          {["all", "Ingestion", "Verification", "Mapping", "Ranking"].map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setSelectedAgentFilter(filter)}
+              className={`px-2 py-0.5 rounded text-[11px] font-mono font-medium transition-colors cursor-pointer border ${
+                selectedAgentFilter === filter
+                  ? "bg-[#183D35] text-white border-[#183D35]"
+                  : "bg-[#FFFFFF] text-[#737D78] border-[#E1E5E0] hover:text-[#252C2A]"
+              }`}
+            >
+              {filter}
+            </button>
+          ))}
         </div>
 
         <AgentLogStream logs={filteredLogs} />
