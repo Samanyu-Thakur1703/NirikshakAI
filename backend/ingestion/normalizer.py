@@ -78,6 +78,129 @@ def clean_coordinate(val: Any) -> Optional[float]:
     return None
 
 
+def run_verification_pipeline(report: DisasterReport) -> tuple:
+    """
+    Run C1-C5 verification checks on a normalized report and return
+    (score, verdict, checks, reasons).
+
+    C1 Official  - matches an official alert feed (sachet/imd/gdacs or alert ids)
+    C2 Physical  - rainfall / satellite evidence for the claimed hazard
+    C3 Provenance- not recycled media (archive match / duplicate detection)
+    C4 Location  - claimed district matches the coordinates
+    C5 Corroboration - corroborated by >=1 independent source
+    """
+    checks = report.checks
+    reasons: list = list(report.reasons)
+    hazard = report.claim.hazard
+    platform = report.source.platform
+
+    # ---- C1: Official check -------------------------------------------------
+    official_alerts = bool(checks.official.alert_ids) or platform in ("sachet", "imd", "gdacs")
+    if official_alerts:
+        checks.official.c1_result = "pass"
+        checks.official.details = f"Official alert feed matched ({platform})"
+    else:
+        checks.official.c1_result = "unknown"
+        checks.official.details = "No official alert feed match"
+
+    # ---- C2: Physical check -------------------------------------------------
+    rainfall = checks.physical.rainfall_mm
+    satellite = checks.physical.satellite_evidence
+    if rainfall > 0 or satellite:
+        checks.physical.c2_result = "pass"
+        checks.physical.details = f"Rainfall {rainfall}mm, satellite={satellite}"
+    else:
+        checks.physical.c2_result = "unknown"
+        checks.physical.details = "No physical telemetry available"
+
+    # ---- C3: Provenance check ----------------------------------------------
+    archive_score = 0.0
+    for media in report.media:
+        archive_score = max(archive_score, float(media.archive_match.score or 0.0))
+    if archive_score >= 0.9:
+        checks.provenance.c3_result = "fail"
+        checks.provenance.recycled = True
+        checks.provenance.archive_match_score = archive_score
+        checks.provenance.details = f"Recycled media (archive match {archive_score:.2f})"
+    elif report.media:
+        checks.provenance.c3_result = "pass"
+        checks.provenance.archive_match_score = archive_score
+        checks.provenance.details = "No recycled media detected"
+    else:
+        checks.provenance.c3_result = "unknown"
+        checks.provenance.details = "No media to verify"
+
+    # ---- C4: Location check -------------------------------------------------
+    lat, lon = report.geo.lat, report.geo.lon
+    claimed_district = (report.geo.district or "").strip()
+    if lat is not None and lon is not None:
+        try:
+            from backend.verification.forensics_agent import geo_locator
+            assigned = geo_locator.assign_district(lat, lon)
+            assigned_district = (assigned.get("district") or "").strip()
+            if assigned_district and (
+                not claimed_district
+                or claimed_district.lower() in assigned_district.lower()
+                or assigned_district.lower() in claimed_district.lower()
+            ):
+                checks.location.c4_result = "pass"
+                checks.location.details = f"Coordinates map to {assigned_district}, {assigned.get('state')}"
+            else:
+                checks.location.c4_result = "fail"
+                checks.location.contradictions = [
+                    f"Claimed '{claimed_district}' but coordinates map to {assigned_district}"
+                ]
+                checks.location.details = "District/coordinate mismatch"
+        except Exception as exc:
+            checks.location.c4_result = "unknown"
+            checks.location.details = f"District assignment failed: {exc}"
+    elif claimed_district:
+        checks.location.c4_result = "pass"
+        checks.location.details = f"District claimed from text: {claimed_district}"
+    else:
+        checks.location.c4_result = "unknown"
+        checks.location.details = "No location data"
+
+    # ---- C5: Corroboration check -------------------------------------------
+    independent = int(checks.corroboration.independent_sources or 0)
+    raw_sources = report.raw_source_data.get("sources") if report.raw_source_data else None
+    if isinstance(raw_sources, list):
+        independent = max(independent, len(set(raw_sources)))
+    checks.corroboration.independent_sources = independent
+    if independent >= 1:
+        checks.corroboration.c5_result = "pass"
+        checks.corroboration.details = f"Corroborated by {independent} independent source(s)"
+    else:
+        checks.corroboration.c5_result = "unknown"
+        checks.corroboration.details = "Single-source report"
+
+    # ---- Score --------------------------------------------------------------
+    score = report.source.reputation * 0.5  # base: platform trust
+    score += 0.15 if checks.official.c1_result == "pass" else (-0.20 if checks.official.c1_result == "fail" else 0.0)
+    score += 0.10 if checks.physical.c2_result == "pass" else 0.0
+    score += 0.10 if checks.provenance.c3_result == "pass" else (-0.25 if checks.provenance.c3_result == "fail" else 0.0)
+    score += 0.15 if checks.location.c4_result == "pass" else (-0.15 if checks.location.c4_result == "fail" else 0.0)
+    score += 0.10 if checks.corroboration.c5_result == "pass" else 0.0
+    score = round(max(0.0, min(1.0, score)), 3)
+
+    fails = [c for c in ("c1_result", "c2_result", "c3_result", "c4_result", "c5_result")
+             if getattr(checks.official if c == "c1_result" else
+                        checks.physical if c == "c2_result" else
+                        checks.provenance if c == "c3_result" else
+                        checks.location if c == "c4_result" else
+                        checks.corroboration, c) == "fail"]
+    if fails:
+        verdict = "rejected"
+    elif score >= 0.6:
+        verdict = "verified"
+    else:
+        verdict = "review"
+
+    reasons.append(f"Verification score {score} (C1={checks.official.c1_result}, C2={checks.physical.c2_result}, "
+                   f"C3={checks.provenance.c3_result}, C4={checks.location.c4_result}, C5={checks.corroboration.c5_result})")
+    return score, verdict, checks, reasons
+
+
 def normalize_report(raw_data: Dict[str, Any], source_platform: str) -> DisasterReport:
     """
     Transform raw data dict into a strictly validated DisasterReport instance.
@@ -218,16 +341,7 @@ def normalize_report(raw_data: Dict[str, Any], source_platform: str) -> Disaster
         )
     )
 
-    score = float(raw_data.get("score", 0.0))
-    verdict = raw_data.get("verdict", "review")
-    if verdict not in ("verified", "review", "rejected"):
-        verdict = "review"
-
-    reasons = raw_data.get("reasons", [])
-    if isinstance(reasons, str):
-        reasons = [reasons]
-
-    return DisasterReport(
+    report = DisasterReport(
         report_id=report_id,
         source=Source(
             platform=platform,
@@ -251,10 +365,19 @@ def normalize_report(raw_data: Dict[str, Any], source_platform: str) -> Disaster
             district=district
         ),
         checks=checks,
-        score=score,
-        verdict=verdict,
-        reasons=reasons,
+        score=float(raw_data.get("score", 0.0)),
+        verdict=raw_data.get("verdict", "review") if raw_data.get("verdict") in ("verified", "review", "rejected") else "review",
+        reasons=raw_data.get("reasons", []),
         created_at=parse_iso_utc(raw_data.get("created_at")),
         updated_at=get_utc_now_iso(),
         raw_source_data=raw_data
     )
+
+    # Run C1-C5 verification checks and set a real score/verdict
+    score, verdict, checks, reasons = run_verification_pipeline(report)
+    report.score = score
+    report.verdict = verdict
+    report.checks = checks
+    report.reasons = reasons
+    report.updated_at = get_utc_now_iso()
+    return report

@@ -70,7 +70,7 @@ class CLIPArchive:
             import torch
 
             # Load model
-            self.model, _ = clip.load("openai/clip-vit-base-patch32", device="cpu")
+            self.model, self.preprocess = clip.load("ViT-B/32", device="cpu")
 
             # Load or create index
             if os.path.exists(self.index_path):
@@ -130,17 +130,16 @@ clip_archive = CLIPArchive()
 
 def compute_clip_embedding(image_path: str) -> 'np.ndarray':
     """Compute CLIP embedding for an image."""
-    if clip_archive.model is None:
+    if clip_archive.model is None or clip_archive.preprocess is None:
         return None
-    import clip
     import torch
     from PIL import Image
 
     img = Image.open(image_path).convert("RGB")
-    img_input = clip.tokenize([str(img)])  # Simplified; use proper preprocessing
+    img_tensor = clip_archive.preprocess(img).unsqueeze(0)
     with torch.no_grad():
-        embedding = clip_archive.model.encode_image(img_input).numpy()
-    return embedding[0]
+        embedding = clip_archive.model.encode_image(img_tensor)
+    return embedding.cpu().numpy()[0]
 
 # ============================================================================
 # TOOL 3: EXIF PARSER
@@ -230,6 +229,20 @@ def _extract_list(text: str, keyword: str) -> list[str]:
 # TOOL 5: GEOLOCATION + DISTRICT ASSIGNMENT
 # ============================================================================
 
+def _point_in_polygon(lat: float, lon: float, ring: list) -> bool:
+    """Ray-casting point-in-polygon test. ring is a list of [lon, lat] pairs."""
+    inside = False
+    n = len(ring)
+    for i in range(n):
+        x1, y1 = ring[i]
+        x2, y2 = ring[(i + 1) % n]
+        if (y1 > lat) != (y2 > lat):
+            x_intersect = x1 + (lat - y1) * (x2 - x1) / (y2 - y1)
+            if x_intersect > lon:
+                inside = not inside
+    return inside
+
+
 class GeoLocator:
     """Geocoding and district assignment engine."""
 
@@ -237,11 +250,20 @@ class GeoLocator:
         self.cache_dir = CACHE_DIR / "geocode"
         self.cache_dir.mkdir(exist_ok=True)
         self.gazetteer_path = DATA_DIR / "indian_gazetteer.json"
-        self.districts_path = DATA_DIR / "india_districts.geojson"
+        self.districts_path = DATA_DIR / "india-districts.geojson"
         self._load_gazetteer()
 
     def _load_gazetteer(self):
-        """Load offline gazetteer."""
+        """Load offline gazetteer and district polygons."""
+        # Load real district GeoJSON for point-in-polygon assignment
+        self._districts = []
+        if self.districts_path.exists():
+            try:
+                with open(self.districts_path, 'r', encoding='utf-8') as f:
+                    self._districts = json.load(f).get("features", [])
+            except Exception:
+                self._districts = []
+
         if self.gazetteer_path.exists():
             with open(self.gazetteer_path, 'r', encoding='utf-8') as f:
                 self.gazetteer = json.load(f)
@@ -261,6 +283,29 @@ class GeoLocator:
     def _save_gazetteer(self):
         with open(self.gazetteer_path, 'w', encoding='utf-8') as f:
             json.dump(self.gazetteer, f, indent=2, ensure_ascii=False)
+
+    def _nearest_city(self, lat: float, lon: float) -> dict:
+        """Fallback: assign the nearest known city when no polygon contains the point."""
+        known_cities = [
+            (13.0827, 80.2707, "Chennai", "Tamil Nadu"),
+            (19.0760, 72.8777, "Mumbai", "Maharashtra"),
+            (22.5726, 88.3639, "Kolkata", "West Bengal"),
+            (26.1445, 91.7362, "Guwahati", "Assam"),
+            (28.6139, 77.2090, "New Delhi", "Delhi"),
+            (12.9716, 77.5946, "Bangalore Urban", "Karnataka"),
+            (17.3850, 78.4867, "Hyderabad", "Telangana"),
+            (11.0168, 76.9558, "Coimbatore", "Tamil Nadu"),
+        ]
+        min_dist = float('inf')
+        closest = (None, None)
+        for city_lat, city_lon, district, state in known_cities:
+            dist = ((lat - city_lat)**2 + (lon - city_lon)**2)**0.5
+            if dist < min_dist:
+                min_dist = dist
+                closest = (district, state)
+        if min_dist < 1.0:  # Within ~100km
+            return {"district": closest[0], "state": closest[1], "method": "nearest_city"}
+        return {"district": "Unknown", "state": "Unknown", "method": "fallback"}
 
     def geocode(self, place_name: str) -> dict:
         """Geocode a place name using Open-Meteo (cached)."""
@@ -307,34 +352,29 @@ class GeoLocator:
         return {"lat": None, "lon": None, "district": None, "method": "failed"}
 
     def assign_district(self, lat: float, lon: float) -> dict:
-        """Assign lat/lon to Indian district using point-in-polygon."""
+        """Assign lat/lon to Indian district using point-in-polygon on real GeoJSON."""
         if not lat or not lon:
             return {"district": None, "state": None}
 
-        # Simple binning by known city coordinates (fast, no GeoJSON needed)
-        known_cities = [
-            (13.0827, 80.2707, "Chennai", "Tamil Nadu"),
-            (19.0760, 72.8777, "Mumbai", "Maharashtra"),
-            (22.5726, 88.3639, "Kolkata", "West Bengal"),
-            (26.1445, 91.7362, "Guwahati", "Assam"),
-            (28.6139, 77.2090, "New Delhi", "Delhi"),
-            (12.9716, 77.5946, "Bangalore Urban", "Karnataka"),
-            (17.3850, 78.4867, "Hyderabad", "Telangana"),
-            (11.0168, 76.9558, "Coimbatore", "Tamil Nadu"),
-        ]
+        if not self._districts:
+            return {"district": None, "state": None, "method": "no_geojson"}
 
-        min_dist = float('inf')
-        closest = (None, None)
-        for city_lat, city_lon, district, state in known_cities:
-            dist = ((lat - city_lat)**2 + (lon - city_lon)**2)**0.5
-            if dist < min_dist:
-                min_dist = dist
-                closest = (district, state)
+        # Fast point-in-polygon check across all district polygons
+        for feature in self._districts:
+            props = feature.get("properties", {})
+            geom = feature.get("geometry")
+            if not geom or geom.get("type") != "Polygon":
+                continue
+            ring = geom["coordinates"][0]
+            if _point_in_polygon(lat, lon, ring):
+                return {
+                    "district": props.get("district"),
+                    "state": props.get("state"),
+                    "method": "geojson_polygon"
+                }
 
-        if min_dist < 1.0:  # Within ~100km
-            return {"district": closest[0], "state": closest[1], "method": "nearest_city"}
-
-        return {"district": "Unknown", "state": "Unknown", "method": "fallback"}
+        # Fallback: nearest city if no polygon contains the point
+        return self._nearest_city(lat, lon)
 
 # Global geo locator instance
 geo_locator = GeoLocator()
@@ -503,13 +543,19 @@ def process_incident(incident: dict) -> dict:
 
 def _download_image(url: str) -> str:
     """Download image to local cache. Returns local path or None."""
-    # TODO: Implement proper download with caching
-    # For now, return None if not a local path
     if url.startswith("http"):
         cache_path = CACHE_DIR / "images" / hashlib.md5(url.encode()).hexdigest()[:16]
         if cache_path.exists():
             return str(cache_path)
-        # Download logic here (Hour 3-4)
+        try:
+            import requests
+            resp = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
+            if resp.status_code == 200 and len(resp.content) > 1000:
+                cache_path.parent.mkdir(parents=True, exist_ok=True)
+                cache_path.write_bytes(resp.content)
+                return str(cache_path)
+        except Exception:
+            pass
         return None
     return url if os.path.exists(url) else None
 
