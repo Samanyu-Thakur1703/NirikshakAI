@@ -159,6 +159,12 @@ app.include_router(reports_router)
 app.include_router(incidents_router)
 app.include_router(stats_router)
 
+# Mount static files directory for GIS layers (districts geojson, etc.)
+from fastapi.staticfiles import StaticFiles
+_data_dir = Path(__file__).resolve().parent.parent / "data"
+app.mount("/static", StaticFiles(directory=str(_data_dir)), name="static")
+
+
 
 @app.get("/")
 def root():

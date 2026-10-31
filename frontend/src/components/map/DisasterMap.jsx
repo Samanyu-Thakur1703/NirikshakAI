@@ -170,8 +170,49 @@ export function DisasterMap({
     // Add navigation controls (Zoom + Compass)
     map.addControl(new maplibregl.NavigationControl({ showCompass: true }), "top-right");
 
+    const addDistrictLayers = (m) => {
+      try {
+        if (!m.getSource("india-districts")) {
+          m.addSource("india-districts", {
+            type: "geojson",
+            data: "http://localhost:8000/static/india-districts.geojson",
+          });
+        }
+        if (!m.getLayer("districts-fill")) {
+          m.addLayer({
+            id: "districts-fill",
+            type: "fill",
+            source: "india-districts",
+            paint: {
+              "fill-color": "#06b6d4",
+              "fill-opacity": 0.06,
+            },
+          });
+        }
+        if (!m.getLayer("districts-border")) {
+          m.addLayer({
+            id: "districts-border",
+            type: "line",
+            source: "india-districts",
+            paint: {
+              "line-color": "#06b6d4",
+              "line-width": 0.5,
+              "line-opacity": 0.2,
+            },
+          });
+        }
+      } catch (err) {
+        console.warn("Could not load district geojson:", err);
+      }
+    };
+
     map.on("load", () => {
       setMapLoaded(true);
+      addDistrictLayers(map);
+    });
+
+    map.on("style.load", () => {
+      addDistrictLayers(map);
     });
 
     mapRef.current = map;

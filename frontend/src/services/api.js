@@ -138,4 +138,15 @@ export const api = {
       return { success: false, error: error.message };
     }
   },
+
+  async dispatchAlert(incidentId) {
+    try {
+      return {
+        success: true,
+        data: await requestWithFallback(`/incidents/${incidentId}/dispatch`, { method: "POST" }),
+      };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
 };

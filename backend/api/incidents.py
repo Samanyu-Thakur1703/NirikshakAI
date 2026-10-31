@@ -153,3 +153,34 @@ def create_or_update_incident(incident: Incident, db: Session = Depends(get_db))
     """
     upsert_incident(db, incident)
     return incident
+
+
+@router.post("/incidents/{incident_id}/dispatch")
+def dispatch_alert(incident_id: str, db: Session = Depends(get_db)):
+    inc = get_incident_by_id(db, incident_id)
+    if not inc:
+        report = get_report_by_id(db, incident_id)
+        if report:
+            inc = Incident(
+                incident_id=f"INC-{report.report_id}",
+                title=f"Disaster Alert: {report.claim.hazard.title()} in {report.geo.district or report.claim.claimed_place}",
+                disaster_type=report.claim.hazard,
+                district=report.geo.district or "Unknown",
+                lat=report.geo.lat,
+                lon=report.geo.lon,
+                radius_km=report.geo.radius_km or 5.0,
+                report_ids=[report.report_id],
+                source_count=1,
+                confidence_score=report.score,
+                status="active",
+                priority="HIGH" if report.score > 0.8 else "MEDIUM",
+                operator_summary=report.claim.text,
+            )
+        else:
+            raise HTTPException(status_code=404, detail=f"Incident '{incident_id}' not found")
+    from backend.verification.dispatch_agent import draft_cap_alert
+    inc.cap_xml = draft_cap_alert(inc)
+    upsert_incident(db, inc)
+    return {"status": "dispatched", "incident_id": inc.incident_id, "cap_xml": inc.cap_xml}
+
+
