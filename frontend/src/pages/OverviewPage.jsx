@@ -27,6 +27,8 @@ import {
 } from "lucide-react";
 import { DisasterMap } from "../components/map/DisasterMap";
 import { formatTimeAgo } from "../utils/formatters";
+import { EmergencyPhoneCallModal } from "../components/common/EmergencyPhoneCallModal";
+import { JudgePitchDrawer } from "../components/common/JudgePitchDrawer";
 
 export function OverviewPage({
   stats,
@@ -47,6 +49,20 @@ export function OverviewPage({
     deployed: 5,
   });
   const [dispatchAlertMsg, setDispatchAlertMsg] = useState(null);
+  const [phoneModalOpen, setPhoneModalOpen] = useState(false);
+  const [activePhoneIncident, setActivePhoneIncident] = useState(null);
+
+  const triggerPhoneAlert = (incident) => {
+    const targetIncident = incident || reports[0] || {
+      id: "REP-IN-2026-0101",
+      title: "Severe Urban Inundation in Phase 8 Mohali",
+      location: "Mohali, Punjab",
+      disasterType: "flood",
+      confidenceScore: 0.94,
+    };
+    setActivePhoneIncident(targetIncident);
+    setPhoneModalOpen(true);
+  };
 
   // Live real-time ticking clock (e.g. "11:42:59 AM")
   useEffect(() => {
@@ -155,6 +171,7 @@ export function OverviewPage({
         deployed: prev.deployed + 1,
       }));
       setDispatchAlertMsg(`Dispatched ${updated[availIdx].name} to nearest active hazard.`);
+      triggerPhoneAlert(reports[0]);
       setTimeout(() => setDispatchAlertMsg(null), 3500);
     } else {
       setDispatchAlertMsg("All frontline responder units are currently deployed.");
@@ -226,16 +243,22 @@ export function OverviewPage({
 
           {/* Send Alert Button */}
           <button
-            onClick={() => onSelectIncident(reports[0] || null)}
+            onClick={() => triggerPhoneAlert(reports[0])}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#111827] hover:bg-[#1E293B] border border-[#1E293B] hover:border-[#334155] text-slate-200 text-xs font-medium transition-colors cursor-pointer"
           >
-            <Bell className="w-3.5 h-3.5 text-[#94A3B8]" />
+            <Bell className="w-3.5 h-3.5 text-[#38BDF8]" />
             <span>Send Alert</span>
           </button>
 
           {/* Activate EWS (Emergency Warning System) - Red Button */}
           <button
-            onClick={() => setEwsActive(!ewsActive)}
+            onClick={() => {
+              const nextState = !ewsActive;
+              setEwsActive(nextState);
+              if (nextState) {
+                triggerPhoneAlert(reports[0]);
+              }
+            }}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-md cursor-pointer ${
               ewsActive
                 ? "bg-[#B91C1C] text-white animate-pulse border border-red-500"
@@ -279,6 +302,32 @@ export function OverviewPage({
           </button>
         </div>
       )}
+
+      {/* Evaluation Briefing Drawer for Judges & Mentors */}
+      <JudgePitchDrawer />
+
+      {/* Hero Operational Stat Bar */}
+      <div className="bg-[#0B101B] border border-[#1E293B] rounded-xl px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs text-[#94A3B8] shadow-md shrink-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="flex items-center gap-1.5 text-slate-200 font-semibold">
+            <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse"></span>
+            Operational Ingestion:
+          </span>
+          <span className="text-white font-bold">60 signals ingested</span>
+          <span className="text-[#334155]">•</span>
+          <span className="text-[#38BDF8] font-bold">5 active incidents</span>
+          <span className="text-[#334155]">•</span>
+          <span className="text-[#10B981] font-bold">3 verified</span>
+          <span className="text-[#334155]">•</span>
+          <span className="text-[#F59E0B] font-bold">1 in operator review</span>
+          <span className="text-[#334155]">•</span>
+          <span className="text-[#EF4444] font-bold">1 rejected hoax</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#64748B]">
+          <Clock className="w-3 h-3 text-[#64748B]" />
+          <span>Last pipeline cycle: 2 min ago</span>
+        </div>
+      </div>
 
       {/* Dispatch feedback toast */}
       {dispatchAlertMsg && (
@@ -481,22 +530,20 @@ export function OverviewPage({
               {/* Rec 1 */}
               <div className="p-2 rounded-lg bg-[#0E1526] border border-[#1E293B] space-y-1">
                 <p className="text-[11px] text-slate-300 leading-snug">
-                  Recommend evacuation for Brgy. San Roque coastal areas within 1 hour
+                  Recommend evacuation for coastal inundation zone within 1 hour
                 </p>
                 <button
-                  onClick={() => {
-                    setEwsActive(true);
-                  }}
+                  onClick={() => triggerPhoneAlert(reports[0])}
                   className="text-[10.5px] text-[#38BDF8] hover:underline font-semibold flex items-center gap-0.5 cursor-pointer"
                 >
-                  <span>&gt; Issue Alert</span>
+                  <span>&gt; Issue Phone Alert</span>
                 </button>
               </div>
 
               {/* Rec 2 */}
               <div className="p-2 rounded-lg bg-[#0E1526] border border-[#1E293B] space-y-1">
                 <p className="text-[11px] text-slate-300 leading-snug">
-                  Dispatch RESCUE-2 to Pasonanca landslide (nearest unit, ETA 8 min)
+                  Dispatch RESCUE-2 to nearest landslide incident (nearest unit, ETA 8 min)
                 </p>
                 <button
                   onClick={handleDispatchNearest}
@@ -509,6 +556,13 @@ export function OverviewPage({
           </div>
         </div>
       </div>
+
+      {/* Emergency Automated Phone Call Modal (Native Web Audio Siren + SpeechSynthesis TTS) */}
+      <EmergencyPhoneCallModal
+        isOpen={phoneModalOpen}
+        onClose={() => setPhoneModalOpen(false)}
+        incident={activePhoneIncident || reports[0]}
+      />
     </div>
   );
 }

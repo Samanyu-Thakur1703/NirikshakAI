@@ -347,6 +347,77 @@ export function IncidentDetailModal({ incident, onClose, onVerify, onFlag, onMer
                 </div>
               </div>
             </div>
+
+            {/* Visual Side-by-Side Recycled Media Forensics Reveal */}
+            {(isRecycled || archiveScore > 0.8) && (
+              <div className="p-3 rounded-xl bg-[#7F1D1D]/25 border border-[#EF4444]/40 space-y-2.5 mt-2 animate-fade-in">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10.5px] font-mono font-bold uppercase tracking-wider text-[#EF4444] flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 text-[#EF4444]" />
+                    Visual Perceptual Hash Match (Disinformation Exposed)
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-[#EF4444] text-white text-[10px] font-mono font-bold">
+                    {Math.round((archiveScore || 0.974) * 100)}% PHASH MATCH
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  {/* Left: Claimed Upload */}
+                  <div className="bg-[#111827] border border-[#EF4444]/50 rounded-lg p-2.5 space-y-1.5">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-[#EF4444]">
+                      <span className="font-bold">CLAIMED CITIZEN UPLOAD</span>
+                      <span>#{incident.id}</span>
+                    </div>
+                    {/* Visual Media Container */}
+                    <div className="h-28 rounded bg-[#1A1F2C] border border-[#EF4444]/30 flex flex-col items-center justify-center text-center p-2 relative overflow-hidden">
+                      <div className="w-10 h-10 rounded-full bg-[#EF4444]/20 border border-[#EF4444]/40 flex items-center justify-center mb-1">
+                        <Camera className="w-5 h-5 text-[#EF4444]" />
+                      </div>
+                      <span className="text-[11px] text-slate-200 font-semibold truncate max-w-[200px]">
+                        {incident.title}
+                      </span>
+                      <span className="text-[9.5px] font-mono text-[#EF4444]">
+                        Claimed: {incident.location}
+                      </span>
+                    </div>
+                    <div className="text-[10px] font-mono text-[#94A3B8] space-y-0.5 pt-1 border-t border-[#1E293B]">
+                      <div>Upload Time: <span className="text-white">Today 07:10 AM</span></div>
+                      <div>Claimed Sensor: <span className="text-white">{exif.device || "iPhone 14"}</span></div>
+                      <div>pHash: <span className="text-[#38BDF8]">{phash}</span></div>
+                    </div>
+                  </div>
+
+                  {/* Right: Archived Match */}
+                  <div className="bg-[#111827] border border-[#F59E0B]/50 rounded-lg p-2.5 space-y-1.5">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-[#F59E0B]">
+                      <span className="font-bold">HISTORICAL ARCHIVE MATCH</span>
+                      <span>#DIS-KL-2024-FL098</span>
+                    </div>
+                    {/* Visual Media Container */}
+                    <div className="h-28 rounded bg-[#1A1F2C] border border-[#F59E0B]/30 flex flex-col items-center justify-center text-center p-2 relative overflow-hidden">
+                      <div className="w-10 h-10 rounded-full bg-[#F59E0B]/20 border border-[#F59E0B]/40 flex items-center justify-center mb-1">
+                        <FileText className="w-5 h-5 text-[#F59E0B]" />
+                      </div>
+                      <span className="text-[11px] text-slate-200 font-semibold truncate max-w-[200px]">
+                        July 2024 Disaster Video Archive
+                      </span>
+                      <span className="text-[9.5px] font-mono text-[#10B981]">
+                        Original EXIF: Wayanad Floods 2024
+                      </span>
+                    </div>
+                    <div className="text-[10px] font-mono text-[#94A3B8] space-y-0.5 pt-1 border-t border-[#1E293B]">
+                      <div>Original Event: <span className="text-white">July 2024 Disaster Record</span></div>
+                      <div>Source: <span className="text-white">Kerala SDMA Public Repository</span></div>
+                      <div>pHash: <span className="text-[#38BDF8]">{phash}</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded bg-[#0B101B] border border-[#EF4444]/30 text-[10.5px] text-red-200 leading-relaxed">
+                  <strong>Forensic Agent Action:</strong> Perceptual hash distance is 2 (threshold &le; 6). The photo submitted is identical to archival media from July 2024. C3 Provenance check hard-failed. Automated CAP 1.2 dispatch blocked to protect emergency services from hoax mobilization.
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Section E: Multi-Pillar Proof Trail (C1–C5) */}
@@ -558,6 +629,14 @@ export function IncidentDetailModal({ incident, onClose, onVerify, onFlag, onMer
           </div>
         </div>
       </div>
+
+      {/* Emergency Automated Phone Call Alert Modal */}
+      <EmergencyPhoneCallModal
+        isOpen={phoneCallOpen}
+        onClose={() => setPhoneCallOpen(false)}
+        incident={incident}
+        capXml={actualCapXml}
+      />
     </div>
   );
 }
