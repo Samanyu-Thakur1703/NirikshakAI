@@ -6,9 +6,16 @@ import {
   GitMerge,
   Check,
   X,
+  Camera,
+  FileText,
+  Binary,
+  Radio,
+  Clock,
+  PhoneCall,
 } from "lucide-react";
 import { DisasterTypeBadge, SeverityBadge } from "../components/common/Badge";
 import { formatTimeAgo } from "../utils/formatters";
+import { EmergencyPhoneCallModal } from "../components/common/EmergencyPhoneCallModal";
 
 export function VerificationQueuePage({
   reports = [],
@@ -19,9 +26,17 @@ export function VerificationQueuePage({
   onSelectIncident,
 }) {
   const [activeTab, setActiveTab] = useState("pending"); // "pending" | "duplicates" | "rejected"
+  const [phoneModalOpen, setPhoneModalOpen] = useState(false);
+  const [dispatchedIncident, setDispatchedIncident] = useState(null);
 
   const pendingReports = reports.filter((r) => r.verdict === "review" || r.status === "pending");
   const rejectedItems = rejectedReports.length > 0 ? rejectedReports : reports.filter((r) => r.verdict === "rejected" || r.status === "flagged");
+
+  const handleApproveAndDispatch = (report) => {
+    onVerify(report.id);
+    setDispatchedIncident(report);
+    setPhoneModalOpen(true);
+  };
 
   // Pair primary and duplicate for comparison demo
   const duplicatePairs = [
@@ -109,6 +124,25 @@ export function VerificationQueuePage({
       {/* 1. Pending Review Tab */}
       {activeTab === "pending" && (
         <div className="space-y-3">
+          {/* Human-in-the-Loop Operator Lane Banner */}
+          <div className="p-3.5 rounded-xl bg-[#78350F]/20 border border-[#F59E0B]/40 text-xs text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-sm">
+            <div className="flex items-start gap-2.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B] animate-ping shrink-0 mt-1"></span>
+              <div>
+                <span className="font-bold text-white block text-xs uppercase tracking-wide">
+                  Human-in-the-Loop Operator Lane (Score: 0.50 – 0.79)
+                </span>
+                <p className="text-[#CBD5E1] text-[11px] leading-relaxed mt-0.5">
+                  To prevent false alarms and unverified resource dispatch, NDMA protocol mandates that reports scored in this tier require human EOC operator validation. Review the physical and sensor checks below and click <strong>Approve & Dispatch</strong> to trigger live alert.
+                </p>
+              </div>
+            </div>
+            <div className="shrink-0 flex items-center gap-1.5 font-mono text-[11px] text-[#F59E0B] bg-[#0B101B] px-2.5 py-1 rounded-lg border border-[#F59E0B]/30">
+              <Clock className="w-3.5 h-3.5" />
+              <span>{pendingReports.length} Awaiting Operator Action</span>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {pendingReports.map((report) => (
               <div
@@ -140,8 +174,8 @@ export function VerificationQueuePage({
                     </div>
                     <div className="flex justify-between text-[#94A3B8]">
                       <span>Score & Consensus:</span>
-                      <span className="font-mono text-[#38BDF8] font-semibold">
-                        Score: {((report.confidenceScore || 0.8) * 100).toFixed(0)}% • Lane: {report.verdict || "review"}
+                      <span className="font-mono text-[#F59E0B] font-semibold">
+                        Score: {((report.confidenceScore || 0.72) * 100).toFixed(0)}% • Lane: Operator Review Required
                       </span>
                     </div>
                   </div>
@@ -164,11 +198,11 @@ export function VerificationQueuePage({
                       Flag Hoax
                     </button>
                     <button
-                      onClick={() => onVerify(report.id)}
-                      className="px-3 py-1 rounded bg-[#10B981] hover:bg-[#059669] text-slate-950 font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors"
+                      onClick={() => handleApproveAndDispatch(report)}
+                      className="px-3 py-1 rounded bg-[#10B981] hover:bg-[#059669] text-slate-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors shadow-sm"
                     >
-                      <Check className="w-3.5 h-3.5" />
-                      Approve & Verify
+                      <PhoneCall className="w-3.5 h-3.5" />
+                      Approve & Dispatch
                     </button>
                   </div>
                 </div>
@@ -351,6 +385,37 @@ export function VerificationQueuePage({
                       </span>
                     </div>
                   </div>
+
+                  {/* Visual Side-by-Side Recycled Media Forensics Highlight */}
+                  {item.checks?.provenance?.recycled && (
+                    <div className="p-2.5 rounded-lg bg-[#7F1D1D]/20 border border-[#EF4444]/40 space-y-2 mb-2.5">
+                      <div className="flex items-center justify-between text-[10px] font-mono">
+                        <span className="text-[#EF4444] font-bold">RECYCLED DISINFORMATION DETECTED</span>
+                        <span className="bg-[#EF4444] text-white px-1.5 py-0.2 rounded font-bold">97.4% MATCH</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-[10px]">
+                        <div className="p-2 rounded bg-[#111827] border border-[#EF4444]/30 space-y-1">
+                          <span className="text-[#EF4444] font-bold block">Claimed Post</span>
+                          <div className="h-14 rounded bg-[#1A1F2C] flex items-center justify-center">
+                            <Camera className="w-5 h-5 text-[#EF4444] opacity-70" />
+                          </div>
+                          <span className="text-slate-300 block truncate">Claimed: {item.location}</span>
+                          <span className="text-[#64748B] block font-mono">pHash: {item.checks?.provenance?.pHash || "7a8b9c0d1e"}</span>
+                        </div>
+                        <div className="p-2 rounded bg-[#111827] border border-[#F59E0B]/30 space-y-1">
+                          <span className="text-[#F59E0B] font-bold block">Historical Archive</span>
+                          <div className="h-14 rounded bg-[#1A1F2C] flex items-center justify-center">
+                            <FileText className="w-5 h-5 text-[#F59E0B] opacity-70" />
+                          </div>
+                          <span className="text-slate-300 block truncate">July 2024 Archive</span>
+                          <span className="text-[#64748B] block font-mono">pHash: {item.checks?.provenance?.pHash || "7a8b9c0d1e"}</span>
+                        </div>
+                      </div>
+                      <span className="text-[9.5px] text-red-200 block leading-tight">
+                        C3 Provenance check hard-failed. Ground rescue deployment prevented.
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-2.5 border-t border-[#1E293B] flex items-center justify-between">
@@ -369,6 +434,13 @@ export function VerificationQueuePage({
           </div>
         </div>
       )}
+
+      {/* Emergency Automated Phone Call Alert Modal */}
+      <EmergencyPhoneCallModal
+        isOpen={phoneModalOpen}
+        onClose={() => setPhoneModalOpen(false)}
+        incident={dispatchedIncident || reports[0]}
+      />
     </div>
   );
 }
