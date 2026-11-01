@@ -15,7 +15,7 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { SignInPage } from "./pages/SignInPage";
 import { SignUpPage } from "./pages/SignUpPage";
 import { useDisasterData } from "./hooks/useDisasterData";
-import { Zap } from "lucide-react";
+import { Zap, Radio } from "lucide-react";
 
 function DashboardContent() {
   const [activePage, setActivePage] = useState("overview");
@@ -31,6 +31,7 @@ function DashboardContent() {
     stats,
     isBackendConnected,
     backendError,
+    isInitialLoading,
     isRefreshing,
     isIngesting,
     searchQuery,
@@ -222,7 +223,20 @@ function DashboardContent() {
 
         {/* Scrollable Page Body */}
         <main className="flex-1 overflow-y-auto p-3 bg-[#090D16]">
-          {renderActivePage()}
+          {isInitialLoading ? (
+            <div className="flex-1 flex flex-col items-center justify-center min-h-[480px] h-full gap-4 text-center">
+              <div className="relative">
+                <div className="w-12 h-12 rounded-full border-2 border-cyan-500/20 border-t-cyan-400 animate-spin" />
+                <Radio className="w-5 h-5 text-cyan-400 absolute inset-0 m-auto animate-pulse" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-slate-200">Loading Disaster Intelligence Engine...</p>
+                <p className="text-xs text-slate-400 font-mono">Connecting to NirikshakAI live telemetry feed</p>
+              </div>
+            </div>
+          ) : (
+            renderActivePage()
+          )}
         </main>
       </div>
 

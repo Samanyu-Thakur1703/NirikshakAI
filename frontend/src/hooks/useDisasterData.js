@@ -1,11 +1,11 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { MOCK_REPORTS } from "../data/mockDisasters";
 import { calculateDashboardStats } from "../utils/formatters";
 import { api } from "../services/api";
 import { normalizeBackendReport, normalizeBackendIncident } from "../utils/normalizer";
 
 export function useDisasterData() {
-  const [reports, setReports] = useState(MOCK_REPORTS);
+  const [reports, setReports] = useState([]);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [backendStats, setBackendStats] = useState(null);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
   const [backendError, setBackendError] = useState(null);
@@ -51,10 +51,11 @@ export function useDisasterData() {
     } catch {
       setIsBackendConnected(false);
       setBackendError(
-        "Backend server offline (port 8000). Active offline fallback dataset loaded for demo continuity."
+        "Backend server offline (port 8000). Please ensure NirikshakAI backend is running."
       );
     } finally {
       setIsRefreshing(false);
+      setIsInitialLoading(false);
     }
   }, []);
 
@@ -246,59 +247,15 @@ export function useDisasterData() {
         }
       }
 
-      const locations = [
-        { name: "Patna riverbank, Bihar", district: "Patna", lat: 25.6093, lon: 85.1235, type: "flood" },
-        { name: "Mandi highway, Himachal Pradesh", district: "Mandi", lat: 31.7087, lon: 76.932, type: "landslide" },
-        { name: "Visakhapatnam beach road, Andhra Pradesh", district: "Visakhapatnam", lat: 17.7231, lon: 83.3327, type: "cyclone" },
-        { name: "Thane Ghodbunder Road, Maharashtra", district: "Thane", lat: 19.26, lon: 72.96, type: "heavy_rainfall" },
-        { name: "Barmer desert belt, Rajasthan", district: "Barmer", lat: 25.75, lon: 71.39, type: "extreme_temperature" },
-      ];
-      const location = locations[Math.floor(Math.random() * locations.length)];
-      const id = `REP-LIVE-${Date.now().toString().slice(-4)}`;
-      setReports((prev) => [
-        {
-          id,
-          disasterType: location.type,
-          title: `[INFLUX DETECTED] Incident in ${location.name}`,
-          location: location.name,
-          district: location.district,
-          state: "India",
-          coordinates: [location.lon, location.lat],
-          latitude: location.lat,
-          longitude: location.lon,
-          timestamp: new Date().toISOString(),
-          source: { platform: "citizen", account: "LiveFeedWatcher", reputation: 0.85, verifiedSource: false },
-          severity: Math.random() > 0.5 ? "high" : "critical",
-          severityScore: 4.4,
-          confidenceScore: 0.72,
-          status: "pending",
-          verdict: "review",
-          clusterId: `QUEUE-SIM-${Date.now().toString().slice(-3)}`,
-          description: `Newly intercepted crowd signal in ${location.name}. Automatic C1 & C2 verification queueing.`,
-          casualties: { injured: 0, stranded: 20, evacuated: 0 },
-          checks: {
-            official: { c1: "unknown", alertId: "PENDING", details: "Evaluating SACHET alerts..." },
-            physical: { c2: "pass", rainfall_mm: 55, details: "Telemetry radar match active" },
-            provenance: { c3: "pass", recycled: false, details: "Original crowd signal" },
-            location: { c4: "pass", details: "Geotag confirmed" },
-            corroboration: { c5: "unknown", count: 1, details: "Spatial clustering underway" },
-          },
-          tags: ["Live Influx", "Auto-Ingested"],
-          assignedAgent: "Ingestion Agent",
-          capStatus: "PENDING_VERDICT",
-        },
-        ...prev,
-      ]);
-      setLiveStreamAlert(`Signal Intercepted: [${location.type.toUpperCase()}] ${location.name}`);
-      setTimeout(() => setLiveStreamAlert(null), 4500);
       setIsIngesting(false);
+      throw new Error("Backend offline — cannot ingest live data");
     },
     [isBackendConnected, loadBackendData]
   );
 
   useEffect(() => {
     if (!isSimulatingLive) return undefined;
-    const timer = setInterval(() => triggerLiveIngestion(), 8000);
+    const timer = setInterval(() => triggerLiveIngestion().catch(() => {}), 8000);
     return () => clearInterval(timer);
   }, [isSimulatingLive, triggerLiveIngestion]);
 
@@ -311,6 +268,7 @@ export function useDisasterData() {
     backendStats,
     isBackendConnected,
     backendError,
+    isInitialLoading,
     isRefreshing,
     isIngesting,
     searchQuery,

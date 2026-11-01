@@ -21,13 +21,15 @@ import {
 } from "lucide-react";
 import { DisasterTypeBadge, SeverityBadge, StatusBadge } from "./Badge";
 import { formatTimeAgo, formatUtcTime } from "../../utils/formatters";
-import { EmergencyPhoneCallModal } from "./EmergencyPhoneCallModal";
+import { api } from "../../services/api";
 
 export function IncidentDetailModal({ incident, onClose, onVerify, onFlag, onMerge }) {
-  const [showCapXml, setShowCapXml] = useState(false);
+  const [showCapXml, setShowCapXml] = useState(Boolean(incident?.cap_xml));
   const [copied, setCopied] = useState(false);
-  const [dispatched, setDispatched] = useState(false);
-  const [phoneCallOpen, setPhoneCallOpen] = useState(false);
+  const [dispatched, setDispatched] = useState(incident?.capStatus === "DISPATCHED");
+  const [isDispatching, setIsDispatching] = useState(false);
+  const [dispatchStatus, setDispatchStatus] = useState(null);
+  const [currentCapXml, setCurrentCapXml] = useState(incident?.cap_xml || null);
 
   if (!incident) return null;
 
@@ -51,7 +53,7 @@ export function IncidentDetailModal({ incident, onClose, onVerify, onFlag, onMer
   };
 
   // Actual CAP XML from backend or compliant fallback
-  const actualCapXml = incident.cap_xml || `<?xml version="1.0" encoding="UTF-8"?>
+  const actualCapXml = currentCapXml || incident.cap_xml || `<?xml version="1.0" encoding="UTF-8"?>
 <alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
   <identifier>CrisisOps-ALERT-${incident.id}</identifier>
   <sender>dispatch.agent@crisisops.ai</sender>
@@ -84,10 +86,28 @@ export function IncidentDetailModal({ incident, onClose, onVerify, onFlag, onMer
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSimulateDispatch = () => {
-    setDispatched(true);
-    setPhoneCallOpen(true);
-    setTimeout(() => setDispatched(false), 3000);
+  const handleDispatch = async () => {
+    setIsDispatching(true);
+    setDispatchStatus(null);
+    try {
+      const targetId = incident.incident_id || incident.id;
+      const res = await api.dispatchAlert(targetId);
+      if (res.success && res.data) {
+        if (res.data.cap_xml) {
+          setCurrentCapXml(res.data.cap_xml);
+        }
+        setDispatched(true);
+        setDispatchStatus("success");
+        setShowCapXml(true);
+        incident.capStatus = "DISPATCHED";
+      } else {
+        setDispatchStatus("error");
+      }
+    } catch {
+      setDispatchStatus("error");
+    } finally {
+      setIsDispatching(false);
+    }
   };
 
   return (
@@ -517,23 +537,30 @@ export function IncidentDetailModal({ incident, onClose, onVerify, onFlag, onMer
                     Dispatch Destination: <strong className="font-mono text-white">sachet.ndma.gov.in/api/v1/cap</strong>
                   </span>
                   <button
-                    onClick={handleSimulateDispatch}
-                    disabled={dispatched}
-                    className="px-3 py-1 rounded bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-medium text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                    onClick={handleDispatch}
+                    disabled={isDispatching || dispatched}
+                    className="px-3 py-1 rounded bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-medium text-xs flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-70"
                   >
                     {dispatched ? (
                       <>
                         <Check className="w-3 h-3" />
-                        <span>Simulated Dispatch Sent</span>
+                        <span>Dispatched to NDMA</span>
                       </>
+                    ) : isDispatching ? (
+                      <span>Dispatching alert...</span>
                     ) : (
                       <>
                         <Send className="w-3 h-3" />
-                        <span>Simulate Dispatch Alert</span>
+                        <span>Dispatch to NDMA</span>
                       </>
                     )}
                   </button>
                 </div>
+                {dispatchStatus === "error" && (
+                  <p className="text-[11px] text-red-400 pt-1">
+                    Failed to dispatch alert to NDMA gateway. Please check backend connection.
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -547,6 +574,26 @@ export function IncidentDetailModal({ incident, onClose, onVerify, onFlag, onMer
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={handleDispatch}
+              disabled={isDispatching || dispatched}
+              className="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs flex items-center gap-1 transition-all shadow-md cursor-pointer disabled:opacity-70"
+            >
+              {dispatched ? (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Dispatched to NDMA</span>
+                </>
+              ) : isDispatching ? (
+                <span>Dispatching...</span>
+              ) : (
+                <>
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Dispatch to NDMA</span>
+                </>
+              )}
+            </button>
+
             {incident.status !== "verified" && incident.verdict !== "verified" && (
               <button
                 onClick={() => {
